@@ -29,8 +29,9 @@ For your final project, we'll be building a Command Line database application.
 Projects need to be approved prior to launching into them, so take some time to brainstorm project options that will fulfill the requirements above.  You must have a minimum of four [user stories](https://en.wikipedia.org/wiki/User_story) to help explain how a user will interact with your app.  A user story should follow the general structure of `"As a <role>, I want <goal/desire> so that <benefit>"`. In example, if we were creating an app to randomly choose nearby restaurants on Yelp, we might write:
 
 * As a user, I want view audio features of a track in my playlist.
-* As a user, I would like to be able to create and edit playlists.
+* As a user, I want to be able to create and edit playlists.
 * As a user, I want to view the average of audio features of my playlist.
+* As a user, I want to be able to view highest rated songs by certain categories.
 * As a user, I want to have the ability to add and remove tracks from my playlist.
 * As a user, I want to get recommendations for new tracks to improve my playlist.
 
