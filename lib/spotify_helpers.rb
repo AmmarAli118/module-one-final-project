@@ -2,8 +2,10 @@
 # module SpotifyHelpers
 # require 'pry'
 # require 'rspotify'
+  def authenticate
+    RSpotify.authenticate(API_KEY, API_SECRET)
+  end
 
-RSpotify.authenticate(API_KEY, API_SECRET)
   def key_letter(key_num)
    keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
    keys[key_num]
@@ -49,7 +51,7 @@ RSpotify.authenticate(API_KEY, API_SECRET)
   def get_sample_array(term)
     #searchs for first 5 playlist and puts them in a song array
     sample = []
-    playlists = RSpotify::Playlist.search(term, limit: 5)
+    playlists = RSpotify::Playlist.search(term, limit: 1)
     playlists.each do | playlist |
       sample += get_tracks_from_playlist(playlist)
     end
