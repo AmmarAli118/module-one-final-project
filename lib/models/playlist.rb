@@ -6,38 +6,73 @@ class Playlist < ActiveRecord::Base
     #returns total duration of playlist
   end
 
-  def self.generate(attributes, length)
+  def self.generate(attributes, input_length)
     #search through Songs and narrow by each attribute (passed in CLI by tags)
 
     #   “acoustic” => “☐ acoustic”, “dancing” => “☐ dancing”, “energetic” => “☐ energetic”,
     #  “instrumental” => “☐ instrumental”, “live” => “☐ live”, “lyrical” => “☐ lyrical”,
     #  “fast” => “☐ fast”, “happy” => “☐ happy”, “melancholy” => “☐ melancholy”
     list = []
+    query = []
     attributes.each do |attribute|
       if (attribute == "acoustic")
-        list.concat(Song.where("acousticness >= .5"))
+        query << "acousticness >= .6"
       elsif (attribute == "dancing")
-        list.concat(Song.where("danceability >= .5"))
+        query << "danceability >= .6"
       elsif (attribute == "energetic")
-        list.concat(Song.where("instrumantalness >= .5"))
+        query << "energy >= .6"
       elsif (attribute == "live")
-        list.concat(Song.where("liveness >= .5"))
+        query << "liveness >= .6"
       elsif (attribute == "lyrical")
-        list.concat(Song.where("lyrical >= .5"))
+        query << "speechiness >= .6"
       elsif (attribute == "fast")
-        list.concat(Song.where("speechiness >= .5"))
+        query << "tempo >= 125.0"
       elsif (attribute == "happy")
-        list.concat(Song.where("valence >= .5"))
+        query << "valence >= .6"
       elsif (attribute == "melancholy")
-        list.concat(Song.where("valence <= .5"))
+        query << "valence <= .4"
       else
         puts "Attribute Not Found"
       end
     end
-    list = list.uniq.sample(length)
-    playlist = Playlist.create()
-    list.each { |song| playlist.songs << song }
-    playlist
+
+    query.uniq!
+    search = []
+    while (query.length > 0)
+      query_string = self.build_query(query)
+      search = Song.where(query_string)
+      if (search.length < input_length)
+        puts "Expanding Query"
+        index = rand(query.length)
+        query.reject! { |q| query.index(q) == index }
+      else
+        break
+      end
+    end
+    if (search.length <= 0)
+      puts "Couldn't satisfy query"
+    else
+      search = search.sample(input_length)
+      playlist = Playlist.create
+      search.each do |song|
+        playlist.songs << song
+      end
+      playlist.save
+      return playlist
+    end
+  end
+
+  def self.build_query(query)
+    #helper method for generate
+    query_string = ""
+    query.each do |q|
+      if (q != query[0])
+        query_string += " AND "
+      end
+
+      query_string += q
+    end
+    query_string
   end
 
   def display
@@ -83,37 +118,5 @@ class Playlist < ActiveRecord::Base
     end
     return_value = return_value / self.songs.length
     return_value * 100
-  end
-
-  def average_danceability
-    self.average(:danceability)
-  end
-
-  def average_energy
-    self.average(:energy)
-  end
-
-  def average_acousticness
-    self.average(:acousticness)
-  end
-
-  def average_liveness
-    self.average(:liveness)
-  end
-
-  def average_instrumentalness
-    self.average(:instrumentalness)
-  end
-
-  def average_valence
-    self.average(:valence)
-  end
-
-  def average_tempo
-    self.average(:tempo)
-  end
-
-  def average_speechiness
-    self.average(:speechiness)
   end
 end

@@ -10,15 +10,15 @@ class CLI
       main_menu
       input = gets.chomp!
       input.downcase!
-      case(input)
-        when "1", "playlists"
-          playlists
-        when "2", "artists"
-          artists
-        when "3", "songs"
-          songs
-        when "4", "exit"
-          exit_flag = true
+      case (input)
+      when "1", "playlists"
+        playlists
+      when "2", "artists"
+        artists
+      when "3", "songs"
+        songs
+      when "4", "exit"
+        exit_flag = true
       end
     end
   end
@@ -58,13 +58,13 @@ class CLI
     puts "|-------------------------------|"
     input = gets.chomp!
     input.downcase!
-    case(input)
+    case (input)
     when "1", "generate playlist"
-        generate_playlist
-      when "2", "view all playlists"
-        view_all_playlists
-      when "3", "find playlist"
-        find_playlist
+      generate_playlist
+    when "2", "view all playlists"
+      view_all_playlists
+    when "3", "find playlist"
+      find_playlist
       # when "4", "back"
       #   exit_flag = true
     end
@@ -105,8 +105,8 @@ class CLI
     input_done = false
 
     tags = {"acoustic" => "☐ acoustic", "dancing" => "☐ dancing", "energetic" => "☐ energetic",
-    "instrumental" => "☐ instrumental", "live" => "☐ live", "lyrical" => "☐ lyrical",
-    "fast" => "☐ fast", "happy" => "☐ happy", "melancholy" => "☐ melancholy"}
+            "instrumental" => "☐ instrumental", "live" => "☐ live", "lyrical" => "☐ lyrical",
+            "fast" => "☐ fast", "happy" => "☐ happy", "melancholy" => "☐ melancholy"}
 
     array_of_tags = []
 
@@ -126,9 +126,9 @@ class CLI
       input = gets.chomp!
       input.downcase!
       input_array = input.split
-      input_array.each do | word |
+      input_array.each do |word|
         if word == "submit"
-          tags.each do | key, value |
+          tags.each do |key, value|
             if value[0] == "☑"
               array_of_tags << key
             end
@@ -150,14 +150,14 @@ class CLI
     puts "|-------------------------------|"
     puts "|         " + Rainbow("Marinading on it").green + "      |"
     puts "| ----------------------------  |"
-    puts "| " + Rainbow("All Playlsit").silver.underline + "                    |"
+    puts "| " + Rainbow("All Playlists").silver.underline + "                    |"
     puts "| " + Rainbow("Enter name of playlist: ").silver + "        |"
     puts "|                               |"
     puts "|                               |"
     puts "|-------------------------------|"
     #get all playlist
     playlists = ["playlist 1", "playlist 2", "playlist 3"]
-    playlists.each do | playlist |
+    playlists.each do |playlist|
       puts "| " + Rainbow("#{playlist}").silver + "      |"
     end
     input = gets.chomp!
@@ -188,7 +188,7 @@ class CLI
     puts "|         " + Rainbow("Marinading on it").green + "      |"
     puts "| ----------------------------  |"
     puts "| " + Rainbow("#{playlist_name}").silver.underline + " |"
-    playlist.each do | song |
+    playlist.each do |song|
       puts "| " + Rainbow("#{song}").silver + "    |"
     end
     puts "|-------------------------------|"
@@ -211,11 +211,11 @@ class CLI
     puts "|-------------------------------|"
     input = gets.chomp!
     input.downcase!
-    case(input)
-      when "1", "view all artists"
-        view_all_artists
-      when "2", "find artist"
-        find_artist
+    case (input)
+    when "1", "view all artists"
+      view_all_artists
+    when "2", "find artist"
+      find_artist
       # when "3", "find playlist"
       #   find_playlist
       # when "4", "back"
@@ -252,11 +252,11 @@ class CLI
     puts "|-------------------------------|"
     input = gets.chomp!
     input.downcase!
-    case(input)
-      when "1", "view all songs"
-        view_all_songs
-      when "2", "find song"
-        find_song
+    case (input)
+    when "1", "view all songs"
+      view_all_songs
+    when "2", "find song"
+      find_song
       # when "3", "find playlist"
       #   find_playlist
       # when "4", "back"

@@ -18,9 +18,4 @@ class Song < ActiveRecord::Base
     feat = self.send("#{feature}")
     return feat > avg
   end
-
-  def self.could_be(feature)
-    #determines whether a song's feature is greater than .5
-    Song.where("? >= .5", feature)
-  end
 end
