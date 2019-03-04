@@ -33,6 +33,12 @@ Projects need to be approved prior to launching into them, so take some time to 
 * As a user, I should be able to reject a suggestion and not see that restaurant suggestion again
 * As a user, I want to be able to save to and retrieve a list of favorite restaurant suggestions
 
+* As a user, I want view audio features of a track in my playlist.
+* As a user, I would like to be able to create and edit playlists.
+* As a user, I want to view the average of audio features of my playlist.
+* As a user, I want to have the ability to add and remove tracks from my playlist.
+* As a user, I want to get recommendations for new tracks to improve my playlist.
+
 ## Instructions
 
 1. Fork and clone this repository.
