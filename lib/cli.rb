@@ -25,9 +25,7 @@ class CLI
 
   def welcome_screen
     system "clear"
-    puts "|-------------------------------|"
-    puts "|         " + Rainbow("Welcome to").green + "            |"
-    puts "| ----------------------------  |"
+    print_title
     puts "|                               |"
     puts "|    " + Rainbow("Please enter your name:").silver + "    |"
     puts "|                               |"
@@ -46,16 +44,10 @@ class CLI
 
   def playlists
     system "clear"
-    puts "|-------------------------------|"
-    puts "|         " + Rainbow("Marinading on it").green + "      |"
-    puts "| ----------------------------  |"
-    puts "| " + Rainbow("Playlists").silver.underline + "                     |"
-    puts "| " + Rainbow("1. Generate Playlist").silver + "          |"
-    puts "| " + Rainbow("2. View All Playlists").silver + "         |"
-    puts "| " + Rainbow("3. Find Playlist").silver + "              |"
-    puts "| " + Rainbow("4. Back").silver + "                       |"
-    puts "|                               |"
-    puts "|-------------------------------|"
+    print_title
+    print_option_title("Playlists")
+    print_options(["1. Generate Playlist", "2. View All Playlists", "3. Find Playlist", "4. Back"])
+
     input = gets.chomp!
     input.downcase!
     case(input)
@@ -72,28 +64,10 @@ class CLI
 
   def generate_playlist
     system "clear"
-    puts "|-------------------------------|"
-    puts "|         " + Rainbow("Marinading on it").green + "      |"
-    puts "| ----------------------------  |"
-    puts "| " + Rainbow("Generate Playlist").silver.underline + "             |"
-    puts "| " + Rainbow("Enter name for playlist:").silver + "      |"
-    puts "|                               |"
-    puts "|                               |"
-    puts "|                               |"
-    puts "|                               |"
-    puts "|-------------------------------|"
+    print_title
+    print_option_title("Generate Playlist")
+    print_options(["Enter name for playlist:", "Enter number of songs:"])
     playlist_name = gets.chomp!
-    # system "clear"
-    # puts "|-------------------------------|"
-    # puts "|         " + Rainbow("Marinading on it").green + "      |"
-    # puts "| ----------------------------  |"
-    # puts "| " + Rainbow("Generate Playlist").silver.underline + "             |"
-    # puts "| " + Rainbow("Enter tags for playlist seperated by a space:").silver + "     |"
-    # puts "| " + Rainbow("Type 'submit' when finished.").silver + "     |"
-    # puts "|                               |"
-    # puts "|     ☐  ☑                             |"
-    # puts "|                               |"
-    # puts "|-------------------------------|"
 
     array_of_tags = tag_selection
     #new_playlist = generate_new_playlist
@@ -106,23 +80,18 @@ class CLI
 
     tags = {"acoustic" => "☐ acoustic", "dancing" => "☐ dancing", "energetic" => "☐ energetic",
     "instrumental" => "☐ instrumental", "live" => "☐ live", "lyrical" => "☐ lyrical",
-    "fast" => "☐ fast", "happy" => "☐ happy", "melancholy" => "☐ melancholy"}
+    "fast" => "☐ fast", "happy" => "☐ happy", "melancholy" => "☐ melancholy", "slow" => "☐ slow",
+    "chill" => "☐ chill"}
 
     array_of_tags = []
 
     while (!input_done)
       system "clear"
-      puts "|-------------------------------|"
-      puts "|         " + Rainbow("Marinading on it").green + "      |"
-      puts "| ----------------------------  |"
-      puts "| " + Rainbow("Generate Playlist").silver.underline + "             |"
-      puts "| " + Rainbow("Enter tags for playlist seperated by a space:").silver + "     |"
-      puts "| " + Rainbow("Type 'submit' when finished.").silver + "     |"
-      puts "|  #{tags["acoustic"]}  #{tags["dancing"]}  #{tags["energetic"]}       |"
-      puts "|  #{tags["instrumental"]}  #{tags["live"]}  #{tags["lyrical"]}       |"
-      puts "|  #{tags["fast"]}  #{tags["happy"]}  #{tags["melancholy"]}       |"
-      puts "|                               |"
-      puts "|-------------------------------|"
+      print_title
+      print_option_title("Generate Playlist")
+      print_options(["Enter tags for playlist seperated by a space:", "Type 'submit' when finished.", "#{tags["acoustic"]}  #{tags["dancing"]}  #{tags["energetic"]}",
+        "#{tags["instrumental"]}  #{tags["live"]}  #{tags["lyrical"]}", "#{tags["fast"]}  #{tags["happy"]}  #{tags["melancholy"]}", "#{tags["slow"]}  #{tags["chill"]}"])
+
       input = gets.chomp!
       input.downcase!
       input_array = input.split
@@ -139,6 +108,12 @@ class CLI
           input_done = true
         else
           tags[word] = "☑ #{word}"
+          word == "fast" ? tags["slow"] = "☐ slow" : 0
+          word == "slow" ? tags["fast"] = "☐ fast" : 0
+          word == "energetic" ? tags["chill"] = "☐ chill" : 0
+          word == "chill" ? tags["energetic"] = "☐ energetic" : 0
+          word == "happy" ? tags["melancholy"] = "☐ melancholy" : 0
+          word == "melancholy" ? tags["happy"] = "☐ happy" : 0
         end
       end
     end
@@ -146,15 +121,10 @@ class CLI
   end
 
   def view_all_playlists
-    system "clear"
-    puts "|-------------------------------|"
-    puts "|         " + Rainbow("Marinading on it").green + "      |"
-    puts "| ----------------------------  |"
-    puts "| " + Rainbow("All Playlsit").silver.underline + "                    |"
-    puts "| " + Rainbow("Enter name of playlist: ").silver + "        |"
-    puts "|                               |"
-    puts "|                               |"
-    puts "|-------------------------------|"
+    print_title
+    print_option_title("All Playlsit")
+    print_options(["Enter name of playlist: "])
+
     #get all playlist
     playlists = ["playlist 1", "playlist 2", "playlist 3"]
     playlists.each do | playlist |
@@ -164,15 +134,10 @@ class CLI
   end
 
   def find_playlist
-    system "clear"
-    puts "|-------------------------------|"
-    puts "|         " + Rainbow("Marinading on it").green + "      |"
-    puts "| ----------------------------  |"
-    puts "| " + Rainbow("Find Playlsit").silver.underline + "                   |"
-    puts "| " + Rainbow("Enter name of playlist: ").silver + "        |"
-    puts "|                               |"
-    puts "|                               |"
-    puts "|-------------------------------|"
+    print_title
+    print_option_title("Find Playlist")
+    print_options(["Enter name of playlist: "])
+
     input = gets.chomp!
     input.downcase!
     #search for playlist
@@ -183,10 +148,7 @@ class CLI
 
   def display_playlist(playlist)
     playlist_name = "Test Playlist"
-    system "clear"
-    puts "|-------------------------------|"
-    puts "|         " + Rainbow("Marinading on it").green + "      |"
-    puts "| ----------------------------  |"
+    print_title
     puts "| " + Rainbow("#{playlist_name}").silver.underline + " |"
     playlist.each do | song |
       puts "| " + Rainbow("#{song}").silver + "    |"
@@ -197,18 +159,10 @@ class CLI
   #Artist menu and options
 
   def artists
-    system "clear"
-    puts "|-------------------------------|"
-    puts "|         " + Rainbow("Marinading on it").green + "      |"
-    puts "| ----------------------------  |"
-    puts "| " + Rainbow("Artists").silver.underline + "                       |"
-    puts "| " + Rainbow("1. View All Artists").silver + "           |"
-    puts "| " + Rainbow("2. Find Artist").silver + "                |"
-    #puts "| 3. Find Playlist              |"
-    puts "| " + Rainbow("3. Back").silver + "                       |"
-    puts "|                               |"
-    puts "|                               |"
-    puts "|-------------------------------|"
+    print_title
+    print_option_title("Artists")
+    print_options(["1. View All Artists", "2. Find Artist", "3. Back"])
+
     input = gets.chomp!
     input.downcase!
     case(input)
@@ -238,18 +192,10 @@ class CLI
   end
 
   def songs
-    system "clear"
-    puts "|-------------------------------|"
-    puts "|         " + Rainbow("Marinading on it").green + "      |"
-    puts "| ----------------------------  |"
-    puts "| " + Rainbow("Songs").silver.underline + "                         |"
-    puts "| " + Rainbow("1. View All Songs").silver + "             |"
-    puts "| " + Rainbow("2. Find Song").silver + "                  |"
-    #puts "| 3. Find Playlist              |"
-    puts "| " + Rainbow("3. Back").silver + "                       |"
-    puts "|                               |"
-    puts "|                               |"
-    puts "|-------------------------------|"
+    print_title
+    print_option_title("Songs")
+    print_options(["1. View All Songs", "2. Find Song", "3. Back"])
+
     input = gets.chomp!
     input.downcase!
     case(input)
@@ -257,10 +203,6 @@ class CLI
         view_all_songs
       when "2", "find song"
         find_song
-      # when "3", "find playlist"
-      #   find_playlist
-      # when "4", "back"
-      #   exit_flag = true
     end
   end
 
@@ -279,18 +221,28 @@ class CLI
   end
 
   def main_menu
+    print_title
+    print_option_title("Welcome! #{self.username}")
+    print_options(["1. Playlists", "2. Artists", "3. Songs", "4. Exit"])
+  end
+
+  def print_option_title(option_title)
+    puts "|\t" + Rainbow("#{option_title}").silver.underline
+  end
+
+  def print_options(options)
+    options.each do | line |
+      puts "|\t" + Rainbow("#{line}").silver
+    end
+    puts "|                               |"
+    puts "---------------------------------"
+  end
+
+  def print_title
     system "clear"
-    puts "---------------------------------"
-    puts "|         " + Rainbow("Marinading on it").green + "      |"
+    puts "|-------------------------------|"
+    puts "|         " + Rainbow("Welcome to").green + "            |"
     puts "| ----------------------------  |"
-    puts "|     " + Rainbow("Welcome! #{self.username}").silver.underline + "  "
-    puts "|                               |"
-    puts "| " + Rainbow("1. Playlists").silver + "                  |"
-    puts "| " + Rainbow("2. Artists").silver + "                    |"
-    puts "| " + Rainbow("3. Songs").silver + "                      |"
-    puts "| " + Rainbow("4. Exit").silver + "                       |"
-    puts "|                               |"
-    puts "---------------------------------"
   end
 
   def black_eyed_peas

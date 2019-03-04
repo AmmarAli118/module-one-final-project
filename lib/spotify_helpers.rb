@@ -57,6 +57,3 @@ def get_sample_array(term)
   end
   sample.uniq
 end
-
-binding.pry
-0
