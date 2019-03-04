@@ -119,4 +119,8 @@ class Playlist < ActiveRecord::Base
     return_value = return_value / self.songs.length
     return_value * 100
   end
+
+  def needs_more_cowbell
+    self.songs << Song.find_or_create(name: "Don't Fear The Reaper")
+  end
 end
