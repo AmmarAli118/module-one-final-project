@@ -6,7 +6,25 @@ class Playlist < ActiveRecord::Base
     #returns total duration of playlist
   end
 
-  def display(quality)
+  def display
+    #Lists the songs
+    #May yield to provide more details
+    self.songs.each do |song|
+      puts "#{song.id}. #{song.title}"
+      yield(song)
+    end
+    nil
+  end
+
+  def display_with_details
+    #puts the song details
+    self.display do |song|
+      song.display(false)
+    end
+    nil
+  end
+
+  def display_quality(quality)
     #puts the quality in a list "SongName: Quality"
     self.songs.map do |song|
       puts "#{song.title}: #{song.send("#{quality}")}"
