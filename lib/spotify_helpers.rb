@@ -41,22 +41,22 @@
     end
   end
 
-  def get_tracks_from_playlist(playlist)
-    #returns an array of tracks
-    playlist.tracks.collect do | track |
-      track
-    end
-  end
+  # get_tracks_from_playlist
+  # def get_tracks_from_playlist(playlist)
+  #   # returns an array of tracks
+  #   playlist.tracks
+  # end
 
-  def get_sample_array(term)
-    #searchs for first 5 playlist and puts them in a song array
-    sample = []
-    playlists = RSpotify::Playlist.search(term, limit: 1)
-    playlists.each do | playlist |
-      sample += get_tracks_from_playlist(playlist)
-    end
-    sample.uniq
-  end
-
-  binding.pry
-  0
+  # def get_sample_array(term)
+  #   #searchs for first 5 playlist and puts them in a song array
+  #   sample = []
+  #   playlists = RSpotify::Playlist.search(term, limit: 1)
+  #   playlists.each do | playlist |
+  #     # sample << get_tracks_from_playlist(playlist)
+  #     sample << playlist.tracks
+  #   end
+  #   sample.uniq
+  # end
+  # 
+  # binding.pry
+  # 0

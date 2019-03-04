@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190304163721) do
+ActiveRecord::Schema.define(version: 20190304213535) do
 
   create_table "playlist_songs", force: :cascade do |t|
     t.integer "song_id"
@@ -41,6 +41,7 @@ ActiveRecord::Schema.define(version: 20190304163721) do
     t.float   "speechiness"
     t.float   "valence"
     t.float   "tempo"
+    t.string  "genre"
   end
 
 end
