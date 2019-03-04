@@ -84,36 +84,4 @@ class Playlist < ActiveRecord::Base
     return_value = return_value / self.songs.length
     return_value * 100
   end
-
-  def average_danceability
-    self.average(:danceability)
-  end
-
-  def average_energy
-    self.average(:energy)
-  end
-
-  def average_acousticness
-    self.average(:acousticness)
-  end
-
-  def average_liveness
-    self.average(:liveness)
-  end
-
-  def average_instrumentalness
-    self.average(:instrumentalness)
-  end
-
-  def average_valence
-    self.average(:valence)
-  end
-
-  def average_tempo
-    self.average(:tempo)
-  end
-
-  def average_speechiness
-    self.average(:speechiness)
-  end
 end
