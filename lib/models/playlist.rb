@@ -84,4 +84,27 @@ class Playlist < ActiveRecord::Base
     return_value = return_value / self.songs.length
     return_value * 100
   end
+
+
+  # add_song
+  def add_song(song)
+    # get the highest index of the song in the playlist
+    self.songs << song
+    last_index = self.playlist_songs.maximum(:index)
+    last_index ||= 0
+    instance_in_playlist = self.playlist_songs.find_by(song_id: song.id)
+    instance_in_playlist.index = last_index += 1
+    instance_in_playlist.save
+  end
+
+  # delete_song
+  def delete_song(song)
+    self.songs.delete(song)
+  end
+  
+  # order_playlist
+  def order_playlist
+
+  end
+
 end
