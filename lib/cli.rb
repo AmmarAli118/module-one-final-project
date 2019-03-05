@@ -133,7 +133,8 @@ class CLI
     tags = {"acoustic" => "☐ acoustic", "dancing" => "☐ dancing", "energetic" => "☐ energetic",
     "instrumental" => "☐ instrumental", "live" => "☐ live", "lyrical" => "☐ lyrical",
     "fast" => "☐ fast", "happy" => "☐ happy", "melancholy" => "☐ melancholy", "slow" => "☐ slow",
-    "chill" => "☐ chill"}
+    "chill" => "☐ chill", "country" => "☐ country", "rock" => "☐ rock", "pop" => "☐ pop", 
+    "classical" => "☐ classical", "rap" => "☐ rap", "jazz" => "☐ jazz"}
 
     array_of_tags = []
 

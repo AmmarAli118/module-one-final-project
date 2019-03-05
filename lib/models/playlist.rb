@@ -33,6 +33,16 @@ class Playlist < ActiveRecord::Base
         query << "valence >= 0.6"
       elsif (attribute == "melancholy")
         query << "valence <= 0.4"
+      elsif (attribute == "rock")
+        query << "genre = 'rock'"
+      elsif (attribute == "jazz")
+        query << "genre = 'jazz'"
+      elsif (attribute == "pop")
+        query << "genre = 'pop'"
+      elsif (attribute == "country")
+        query << "genre = 'country'"
+      elsif (attribute == "classical")
+        query << "genre = 'classical'"
       else
         puts "Attribute Not Found"
       end
@@ -76,15 +86,28 @@ class Playlist < ActiveRecord::Base
 
   def self.build_query(query)
     #helper method for generate
+    #final form: "attr > .5 AND attr2 <= .4 AND (genre = genre1 OR genre = genre2)
     query_string = ""
-    query.each do |q|
-      if (q != query[0])
-        query_string += " AND "
-      end
+    genre_string = "("
 
-      query_string += q
+    query.each do |q|
+      if q[0] == "g"
+        if (genre_string.length > 1)
+          genre_string += " OR "
+        end
+        genre_string += q
+      else
+        if (query_string.length > 0)
+          query_string += " AND "
+        end
+        query_string += q
+      end
     end
-    query_string
+    return_string = "#{query_string} AND #{genre_string})"
+  end
+
+  def genres
+    return songs.map { |song| song.genre }.uniq!
   end
 
   def display
@@ -137,7 +160,7 @@ class Playlist < ActiveRecord::Base
     return_value / self.songs.length
   end
 
-  def consistent(feature)
+  def get_deviation(feature)
     #compares each value against the average, returns the average deviation
     #determines varience via squaring the difference, giving weight to extreme differences
     #the lower the value, the more consistent the quality
@@ -184,7 +207,7 @@ class Playlist < ActiveRecord::Base
 
   def tag_it(array, feature, more, tag)
     #helper method for #analyze_for_tags
-    if (feature_is_sufficient?(feature, more) && self.consistent(feature) <= 0.05)
+    if (feature_is_sufficient?(feature, more) && self.get_deviation(feature) <= 0.05)
       array << tag
     end
   end
@@ -219,7 +242,9 @@ class Playlist < ActiveRecord::Base
       puts ("Removed")
 
       query = "#{feature} #{evaluator} #{avg}"
-      find = Song.where(query).sample(1).first
+
+      #Daisiest Chain: Selects a random song that fits the feature specs and falls within a relevant genre
+      find = Song.where(query).select { |song| self.genres.include?(song.genre) }.sample(1).first
 
       puts ("Adding #{find.title}: #{find.send("#{feature}")}")
       add_song(find)
