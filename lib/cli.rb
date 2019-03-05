@@ -58,6 +58,32 @@ class CLI
     box
   end
 
+  def make_versatile_box(text)
+    new_line_count = text.count("\n")
+    new_line_count += 3
+    longest_line = 0
+    text.split("\n").each do | line |
+      if line.length > longest_line
+        longest_line = line.length
+      end
+    end
+
+    system "clear"
+    box = TTY::Box.frame(width: longest_line, height: new_line_count, border: :thick, title: {top_left: "TITLE"},
+      style: {
+        fg: :white,
+        bg: :black,
+        border: {
+          fg: :green,
+          bg: :black
+        }
+        }) do
+          text
+        end
+    print box
+    box
+  end
+
   def welcome_screen
 
     make_box("\n\n\nPlease enter your name:")
@@ -175,26 +201,19 @@ class CLI
   end
 
   def display_playlist(playlist)
-    playlist_info = {"acoustic" => 0.77, "dancing" => 0.34, "energetic" => 0.67,
-    "instrumental" => 0.13, "live" => 0.22, "lyrical" => 0.45,
-    "fast" => 0.65, "happy" => 0.23, "melancholy" => 0.56, "slow" => 0.34,
-    "chill" => 0.45}
     playlist_data = playlist.get_data
 
     print_bargraph(playlist_data[:data], playlist_data[:name])
     playlist_song_array = []
-    # i = 1
-    # 29.times {
-    #   playlist_song_array << "song#{i}"
-    #   i += 1
-    # }
+
     playlist.songs.each do | song |
-      playlist_song_array << "#{song.title}"
+      playlist_song_array << "#{song.title} - #{song.artist}"
     end
 
     songs_string = print_playlist_songs(playlist_song_array, playlist_data[:name])
-    songs_string += "\na)Add Song  b) Remove Song\n"
-    make_large_box(songs_string)
+    songs_string += "\n\na)Add Song  b) Remove Song\n"
+    #make_large_box(songs_string)
+    make_versatile_box(songs_string)
 
     input = gets.chomp!
     input.downcase!
@@ -215,6 +234,8 @@ class CLI
     songs_string = print_playlist_songs(playlist_song_array, playlist_data[:name])
     songs_string += "\nEnter name of song you want to add: \n"
     make_large_box(songs_string)
+    input = gets.chomp!
+    input.downcase!
   end
 
   def remove_song_from_playlist(playlist)
@@ -227,6 +248,8 @@ class CLI
     songs_string = print_playlist_songs(playlist_song_array, playlist_data[:name])
     songs_string += "\nEnter name of song you want to remove: \n"
     make_large_box(songs_string)
+    input = gets.chomp!
+    input.downcase!
   end
 
   def print_playlist_songs(playlist_song_array, playlist_name)
@@ -235,27 +258,12 @@ class CLI
     i = 0
     while i < (playlist_song_array.length)
       songs_string += "#{i+1}.#{playlist_song_array[i]}  \t\t"
-      if ((i+1) % 5 ) == 0
+      if ((i+1) % 2 ) == 0
         songs_string += "\n"
       end
       i += 1
     end
     songs_string
-    #
-    # songs_string += "\na)Add Song  b) Remove Song\n"
-    #
-    # box = TTY::Box.frame(width: 100, height:14, border: :thick, title: {top_left: "TITLE"},
-    #   style: {
-    #     fg: :white,
-    #     bg: :black,
-    #     border: {
-    #       fg: :green,
-    #       bg: :black
-    #     }
-    #     }) do
-    #       songs_string
-    #     end
-    # print box
   end
 
   def print_table
