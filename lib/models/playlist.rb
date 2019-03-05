@@ -145,8 +145,7 @@ class Playlist < ActiveRecord::Base
     return_value = self.songs.inject(0) do |sum, song|
       sum + (avg - song.send("#{feature}")).abs2
     end
-    return_value = return_value / self.songs.length
-    return_value
+    return_value / self.songs.length
   end
 
   def distribution_by_feature(feature)
@@ -161,7 +160,6 @@ class Playlist < ActiveRecord::Base
         return_hash[:neutral] += 1
       end
     end
-
     return_hash
   end
 
@@ -196,7 +194,6 @@ class Playlist < ActiveRecord::Base
     if (feature == :tempo)
       evaluator = (more ? ">=125" : "<=115")
     end
-
     return eval("#{self.average(feature)} #{evaluator}")
   end
 
@@ -237,8 +234,6 @@ class Playlist < ActiveRecord::Base
     return !self.songs.includes(Song.find(name: "Don't Fear The Reaper"))
   end
 
-  # ######### change index to playlist_index
-
   # add_song
   def add_song(song)
     # adds song to playlist and creates index based on number of
@@ -264,6 +259,10 @@ class Playlist < ActiveRecord::Base
     # returns an array of songs in index order
     playlist_songs = self.playlist_songs.order(:playlist_index)
     playlist_songs.map { |playlist_song| playlist_song.song }
+  end
+
+  def print_playlist
+    self.playlist_songs.each {|song| puts "#{song} #{song.title}"}
   end
 
   # shuffle_song
