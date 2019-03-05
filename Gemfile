@@ -7,3 +7,6 @@ gem "pry"
 gem "require_all"
 gem "rspotify"
 gem 'rainbow'
+gem 'tty-box'
+gem 'tty-table'
+gem 'tty-pie'
