@@ -18,4 +18,12 @@ class Song < ActiveRecord::Base
     feat = self.send("#{feature}")
     return feat > avg
   end
+
+  def add_to_playlist(playlist)
+    playlist.songs << self
+  end
+
+  def song_data
+    self.instance_values
+  end
 end
