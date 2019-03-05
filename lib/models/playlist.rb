@@ -14,25 +14,25 @@ class Playlist < ActiveRecord::Base
     # Creates a SQL query based on given tags
     attributes.each do |attribute|
       if (attribute == "acoustic")
-        query << "acousticness >= .6"
+        query << "acousticness >= 0.6"
       elsif (attribute == "dancing")
-        query << "danceability >= .6"
+        query << "danceability >= 0.6"
       elsif (attribute == "energetic")
-        query << "energy >= .6"
+        query << "energy >= 0.6"
       elsif (attribute == "chill")
-        query << "energy <= .4"
+        query << "energy <= 0.4"
       elsif (attribute == "live")
-        query << "liveness >= .6"
+        query << "liveness >= 0.6"
       elsif (attribute == "lyrical")
-        query << "speechiness >= .6"
+        query << "speechiness >= 0.6"
       elsif (attribute == "fast")
         query << "tempo >= 125.0"
       elsif (attribute == "slow")
         query << "tempo <= 115.0"
       elsif (attribute == "happy")
-        query << "valence >= .6"
+        query << "valence >= 0.6"
       elsif (attribute == "melancholy")
-        query << "valence <= .4"
+        query << "valence <= 0.4"
       else
         puts "Attribute Not Found"
       end
@@ -60,22 +60,6 @@ class Playlist < ActiveRecord::Base
       end
     end
 
-    # while (query.length > 0)
-    #   query_string = self.build_query(query)
-    #   abandoned = []
-    #   search.concat(Song.where(query_string))
-    #   if (search.length < input_length)
-    #     puts "Expanding Query"
-    #     indx = rand(query.length)
-    #     abandoned << query[indx]
-    #     query.reject! { |q| query.index(q) == indx }
-    #     if (query.length == 0)
-
-    #     end
-    #   else
-    #     break
-    #   end
-    # end
     if (search.length <= 0)
       puts "Couldn't satisfy query"
     else
@@ -194,7 +178,17 @@ class Playlist < ActiveRecord::Base
     end
   end
 
+  def optimize(feature, more_or_less)
+    #improve the playlist based on the feature
+    #should earn the playlist the appropriate tag
+    #if the playlist already has the tag, it should raise the average and lower inconsistencies
+
+    avg = average(feature)
+    cons = consistent(feature)
+    self.delete_song(self.songs.order(feature).first)
+  end
+
   def needs_more_cowbell
-    self.songs << Song.find_or_create(name: "Don't Fear The Reaper")
+    return !self.songs.includes(Song.find(name: "Don't Fear The Reaper"))
   end
 end
