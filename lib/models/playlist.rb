@@ -228,9 +228,9 @@ class Playlist < ActiveRecord::Base
     # adds song to playlist and creates index based on number of
     # songs in the playlist
     self.songs << song
-    #  song_in_playlist = self.playlist_songs.last
-    #  song_in_playlist.playlist_index = self.playlist_songs.length
-    #  song_in_playlist.save
+     song_in_playlist = self.playlist_songs.last
+     song_in_playlist.playlist_index = self.playlist_songs.length
+     song_in_playlist.save
   end
 
   # delete_song
