@@ -1,5 +1,5 @@
 # seeds.rb
-
+require_rel "../config/environment.rb"
 # authenticate
 def authenticate
   # Authenticate RSpotify Wrapper
@@ -17,7 +17,7 @@ def seed_data(playlist, genre)
     # create instance variables for legibility
     name = track.name
     artist = track.artists.first.name
-    track.album.name
+    album = track.album.name
     features = track.audio_features
 
     # creates new song instance with api data
@@ -36,14 +36,15 @@ def seed_data(playlist, genre)
       speechiness: speechiness,
       valence: valence,
       tempo: tempo,
-      genre: genre
+      genre: genre,
     )
   end
 end
 
+authenticate
 # sample data #
 rock_songs_playlist = get_playlist_by_search("rock").first
 
 # SEED DATA
-authenticate
-seed_data(rock_songs_playlist.take(20), "rock")
+
+seed_data(rock_songs_playlist, "rock")
