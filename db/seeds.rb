@@ -33,6 +33,7 @@ def seed_data(playlist, genre)
       tempo: features.tempo
     )
   end
+
 end
 
 # need to add method for creating playlists
@@ -42,5 +43,4 @@ end
 rock_songs_playlist = get_playlist_by_search("rock").first
 
 # SEED DATA
-authenticate
 seed_data(rock_songs_playlist, "rock")
