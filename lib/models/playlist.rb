@@ -2,7 +2,7 @@ class Playlist < ActiveRecord::Base
   has_many :playlist_songs
   has_many :songs, through: :playlist_songs
 
-  def self.generate(attributes, input_length)
+  def self.generate(p_name, attributes, input_length)
     #search through Songs and narrow by each attribute (passed in CLI by tags)
 
     #   “acoustic” => “☐ acoustic”, “dancing” => “☐ dancing”, “energetic” => “☐ energetic”,
@@ -68,6 +68,7 @@ class Playlist < ActiveRecord::Base
       search.each do |song|
         playlist.songs << song
       end
+      playlist.name = p_name
       playlist.save
       return playlist
     end
@@ -165,41 +166,71 @@ class Playlist < ActiveRecord::Base
     tags
   end
 
-  def tag_it(array, feature, is_high, tag)
+  def tag_it(array, feature, more, tag)
     #helper method for #analyze_for_tags
-    if (feature == :tempo)
-      if ((is_high && average(:tempo) >= 125) || (!is_high && average(:tempo) <= 115))
-        array < tag
-      end
-    elsif ((self.average(feature) >= 0.6 && is_high) || (self.average(feature) <= 0.4 && !is_high))
-      if (self.consistent(feature) <= 0.05)
-        array << tag
-      end
+    if (feature_is_sufficient(feature, more) && self.consistent(feature) <= 0.05)
+      array << tag
     end
   end
 
-  def optimize(feature, more_or_less)
+  def feature_is_sufficient(feature, more)
+    # Determines if the average of a feature is sufficient to be considered of that tag
+
+    evaluator = (more ? ">= 0.6" : "<= 0.4")
+    if (feature == :tempo)
+      evaluator = (more ? ">=125" : "<=115")
+    end
+
+    return eval("#{self.average(feature)} #{evaluator}")
+  end
+
+  def optimize(feature, percent, more)
     #improve the playlist based on the feature
     #should earn the playlist the appropriate tag
     #if the playlist already has the tag, it should raise the average and lower inconsistencies
-    avg = average(feature)
-    cons = consistent(feature)
-    self.delete_song(self.songs.order(feature).first)
+    #"more" describes a boolean, evaluating whether the value is increasing or decreasing
+    # will give up if half or more of the playlist has been replaced
+
+    evaluator = (more ? ">" : "<")
+    remove_value = (more ? "first" : "last")
+    loop_count = 0
+
+    loop do
+      avg = average(feature)
+      del_song = self.songs.order(feature).send(remove_value)
+      puts ("Removing #{del_song.title}: #{del_song.send("#{feature}")}")
+      delete_song(del_song)
+      puts ("Removed")
+
+      query = "#{feature} #{evaluator} #{avg}"
+      find = Song.where(query).sample(1).first
+
+      puts ("Adding #{find.title}: #{find.send("#{feature}")}")
+      add_song(find)
+      puts ("Added")
+
+      loop_count += 1
+
+      puts ("Total #{loop_count}")
+
+      break if (feature_is_sufficient(feature, more) || loop_count >= songs.length * percent)
+    end
   end
 
   def needs_more_cowbell
     return !self.songs.includes(Song.find(name: "Don't Fear The Reaper"))
   end
-# ######### change index to playlist_index
+
+  # ######### change index to playlist_index
 
   # add_song
   def add_song(song)
     # adds song to playlist and creates index based on number of
     # songs in the playlist
     self.songs << song
-    song_in_playlist = self.playlist_songs.last
-    song_in_playlist.playlist_index = self.playlist_songs.length
-    song_in_playlist.save
+    #  song_in_playlist = self.playlist_songs.last
+    #  song_in_playlist.playlist_index = self.playlist_songs.length
+    #  song_in_playlist.save
   end
 
   # delete_song
