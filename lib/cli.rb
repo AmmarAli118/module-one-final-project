@@ -26,7 +26,7 @@ class CLI
 
   def make_box(text)
     system "clear"
-    box = TTY::Box.frame(width: 50, height:10, border: :thick, title: {top_left: "TITLE"},
+    box = TTY::Box.frame(width: 50, height:10, border: :thick, title: {top_left: "SPOPTIMIZER"},
       style: {
         fg: :white,
         bg: :black,
@@ -43,7 +43,7 @@ class CLI
 
   def make_large_box(text)
     system "clear"
-    box = TTY::Box.frame(width: 100, height:15, border: :thick, title: {top_left: "TITLE"},
+    box = TTY::Box.frame(width: 100, height:15, border: :thick, title: {top_left: "SPOPTIMIZER"},
       style: {
         fg: :white,
         bg: :black,
@@ -69,7 +69,7 @@ class CLI
     end
 
     system "clear"
-    box = TTY::Box.frame(width: longest_line, height: new_line_count, border: :thick, title: {top_left: "TITLE"},
+    box = TTY::Box.frame(width: longest_line, height: new_line_count, border: :thick, title: {top_left: "SPOPTIMIZER"},
       style: {
         fg: :white,
         bg: :black,
@@ -211,7 +211,7 @@ class CLI
     end
 
     songs_string = print_playlist_songs(playlist_song_array, playlist_data[:name])
-    songs_string += "\n\na)Add Song  b) Remove Song\n"
+    songs_string += "\n\na)Add Song  b) Remove Song c) Optimize Playlist d) Data e) Reorder\n"
     #make_large_box(songs_string)
     make_versatile_box(songs_string)
 
@@ -221,6 +221,12 @@ class CLI
       add_song_to_playlist(playlist)
     elsif input == "b" || input == "remove song"
       remove_song_from_playlist(playlist)
+    elsif input == "c" || input == "optimize playlist"
+      optimize_playlist(playlist)
+    elsif input == "d" || input == "data"
+      display_data(playlist)
+    elsif input == "e" || input == "reorder"
+      reorder_playlist(playlist)
     end
   end
 
@@ -252,6 +258,26 @@ class CLI
     input.downcase!
   end
 
+  def optimize_playlist(playlist)
+    playlist_data = playlist.get_data
+    playlist_song_array = []
+    playlist.songs.each do | song |
+      playlist_song_array << "#{song.title}"
+    end
+
+    songs_string = print_playlist_songs(playlist_song_array, playlist_data[:name])
+    optimize_prompt = "Optimize Playlist\nEnter a feature to optimize: \n-acousticness -danceability -energy\n-instrumentalness -liveness -speechiness\n-valence   -tempo\n"
+    optimize_prompt += songs_string
+
+    make_versatile_box(optimize_prompt)
+    input = gets.chomp!
+    input.downcase!
+    #specific feature by col title
+    #percent is a float less than 0
+    #more is a boolean to determine if you want less or more
+    playlist.optimize(feature, percent, more)
+  end
+
   def print_playlist_songs(playlist_song_array, playlist_name)
     songs_string = ""
     songs_string += "#{playlist_name}\n"
@@ -263,6 +289,7 @@ class CLI
       end
       i += 1
     end
+    songs_string += "\n---------------------------"
     songs_string
   end
 
