@@ -182,7 +182,6 @@ class Playlist < ActiveRecord::Base
     #improve the playlist based on the feature
     #should earn the playlist the appropriate tag
     #if the playlist already has the tag, it should raise the average and lower inconsistencies
-
     avg = average(feature)
     cons = consistent(feature)
     self.delete_song(self.songs.order(feature).first)

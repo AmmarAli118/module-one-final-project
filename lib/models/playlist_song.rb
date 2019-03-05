@@ -14,6 +14,17 @@ class PlaylistSong < ActiveRecord::Base
     self.save
   end
 
+  # move_up
+  def move_up
+    target_index = self.playlist_index - 1
+    PlaylistSong.find_by(playlist_index: target_index).down_index
+  end
+
+  # move_down
+  def move_down
+
+  end
+
   # reorder_from_index
   def self.reorder_from_index(deleted_index)
     # renumbers all songs in a playlist after a deleted song
