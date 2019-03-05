@@ -41,6 +41,23 @@ class CLI
     box
   end
 
+  def make_large_box(text)
+    system "clear"
+    box = TTY::Box.frame(width: 100, height:15, border: :thick, title: {top_left: "TITLE"},
+      style: {
+        fg: :white,
+        bg: :black,
+        border: {
+          fg: :green,
+          bg: :black
+        }
+        }) do
+          text
+        end
+    print box
+    box
+  end
+
   def welcome_screen
 
     make_box("\n\n\nPlease enter your name:")
@@ -134,19 +151,9 @@ class CLI
       i += 1
     end
 
-    box = TTY::Box.frame(width: 100, height:14, border: :thick, title: {top_left: "TITLE"},
-      style: {
-        fg: :white,
-        bg: :black,
-        border: {
-          fg: :green,
-          bg: :black
-        }
-        }) do
-          all_playlist_string
-        end
-    print box
+    make_large_box(all_playlist_string)
     input = gets.chomp!
+
     i = 1
     all_playlist.each do | playlist |
       if input.to_i == i
@@ -185,7 +192,41 @@ class CLI
       playlist_song_array << "#{song.title}"
     end
 
-    print_playlist_songs(playlist_song_array, playlist_data[:name])
+    songs_string = print_playlist_songs(playlist_song_array, playlist_data[:name])
+    songs_string += "\na)Add Song  b) Remove Song\n"
+    make_large_box(songs_string)
+
+    input = gets.chomp!
+    input.downcase!
+    if input == "a" || input == "add song"
+      add_song_to_playlist(playlist)
+    elsif input == "b" || input == "remove song"
+      remove_song_from_playlist(playlist)
+    end
+  end
+
+  def add_song_to_playlist(playlist)
+    playlist_data = playlist.get_data
+    playlist_song_array = []
+    playlist.songs.each do | song |
+      playlist_song_array << "#{song.title}"
+    end
+
+    songs_string = print_playlist_songs(playlist_song_array, playlist_data[:name])
+    songs_string += "\nEnter name of song you want to add: \n"
+    make_large_box(songs_string)
+  end
+
+  def remove_song_from_playlist(playlist)
+    playlist_data = playlist.get_data
+    playlist_song_array = []
+    playlist.songs.each do | song |
+      playlist_song_array << "#{song.title}"
+    end
+
+    songs_string = print_playlist_songs(playlist_song_array, playlist_data[:name])
+    songs_string += "\nEnter name of song you want to remove: \n"
+    make_large_box(songs_string)
   end
 
   def print_playlist_songs(playlist_song_array, playlist_name)
@@ -194,24 +235,27 @@ class CLI
     i = 0
     while i < (playlist_song_array.length)
       songs_string += "#{i+1}.#{playlist_song_array[i]}  \t\t"
-      if ((i+1) % 3 ) == 0
+      if ((i+1) % 5 ) == 0
         songs_string += "\n"
       end
       i += 1
     end
-
-    box = TTY::Box.frame(width: 100, height:14, border: :thick, title: {top_left: "TITLE"},
-      style: {
-        fg: :white,
-        bg: :black,
-        border: {
-          fg: :green,
-          bg: :black
-        }
-        }) do
-          songs_string
-        end
-    print box
+    songs_string
+    #
+    # songs_string += "\na)Add Song  b) Remove Song\n"
+    #
+    # box = TTY::Box.frame(width: 100, height:14, border: :thick, title: {top_left: "TITLE"},
+    #   style: {
+    #     fg: :white,
+    #     bg: :black,
+    #     border: {
+    #       fg: :green,
+    #       bg: :black
+    #     }
+    #     }) do
+    #       songs_string
+    #     end
+    # print box
   end
 
   def print_table
@@ -266,19 +310,8 @@ class CLI
       bargraph_string += "\n"
       i -= 1
     end
-    bargraph_string += "   acousticness danceability energy instrumentalness liveness speechiness fast happy melancholy slowness chill \n"
-    box = TTY::Box.frame(width: 100, height:14, border: :thick, title: {top_left: "TITLE"},
-      style: {
-        fg: :white,
-        bg: :black,
-        border: {
-          fg: :green,
-          bg: :black
-        }
-        }) do
-          bargraph_string
-        end
-    print box
+    bargraph_string += "   acousticness danceability energy instrumentalness liveness speechiness valence tempo\n"
+    make_large_box(bargraph_string)
   end
 
   #Artist menu and options
