@@ -203,23 +203,23 @@ class Playlist < ActiveRecord::Base
 
   # delete_song
   def delete_song(song)
+    # gets the index of the song to be deleted
+    deleted_index = self.playlist_songs.find_by(song_id: song.id).playlist_index
+    # deletes song and reorders remaining tracks
     self.songs.delete(song)
+    self.playlist_songs.reorder_from_index(deleted_index)
   end
 
   # order_playlist
   def order_playlist
     # returns an array of songs in index order
-
+    playlist_songs = self.playlist_songs.order(:playlist_index)
+    playlist_songs.map {|playlist_song| playlist_song.song}
   end
 
   # shuffle_song
   def shuffle_song
-
-  end
-
-  # update_playlist_index
-  def update_playlist_index
-
+    shuffled_songs = self.order_playlist.shuffle
   end
 
 end
