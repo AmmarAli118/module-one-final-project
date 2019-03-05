@@ -2,18 +2,16 @@ class Playlist < ActiveRecord::Base
   has_many :playlist_songs
   has_many :songs, through: :playlist_songs
 
-  def duration
-    #returns total duration of playlist
-  end
-
   def self.generate(attributes, input_length)
     #search through Songs and narrow by each attribute (passed in CLI by tags)
 
     #   “acoustic” => “☐ acoustic”, “dancing” => “☐ dancing”, “energetic” => “☐ energetic”,
     #  “instrumental” => “☐ instrumental”, “live” => “☐ live”, “lyrical” => “☐ lyrical”,
     #  “fast” => “☐ fast”, “happy” => “☐ happy”, “melancholy” => “☐ melancholy”
+
     list = []
     query = []
+    # Creates a SQL query based on given tags
     attributes.each do |attribute|
       if (attribute == "acoustic")
         query << "acousticness >= .6"
@@ -21,12 +19,16 @@ class Playlist < ActiveRecord::Base
         query << "danceability >= .6"
       elsif (attribute == "energetic")
         query << "energy >= .6"
+      elsif (attribute == "chill")
+        query << "energy <= .4"
       elsif (attribute == "live")
         query << "liveness >= .6"
       elsif (attribute == "lyrical")
         query << "speechiness >= .6"
       elsif (attribute == "fast")
         query << "tempo >= 125.0"
+      elsif (attribute == "slow")
+        query << "tempo <= 115.0"
       elsif (attribute == "happy")
         query << "valence >= .6"
       elsif (attribute == "melancholy")
@@ -38,17 +40,42 @@ class Playlist < ActiveRecord::Base
 
     query.uniq!
     search = []
-    while (query.length > 0)
-      query_string = self.build_query(query)
-      search = Song.where(query_string)
+
+    query_string = self.build_query(query)
+    search.concat(Song.where(query_string))
+    search.uniq!
+    query_size = query.length
+    while (query_size > 0)
       if (search.length < input_length)
-        puts "Expanding Query"
-        index = rand(query.length)
-        query.reject! { |q| query.index(q) == index }
+        #if the full query is not enough, find largest possible combination
+        query_size -= 1
+        new_queries = query.combination(query_size).to_a
+        new_queries.each do |query|
+          query_string = self.build_query(query)
+          search.concat(Song.where(query_string))
+          search.uniq!
+        end
       else
         break
       end
     end
+
+    # while (query.length > 0)
+    #   query_string = self.build_query(query)
+    #   abandoned = []
+    #   search.concat(Song.where(query_string))
+    #   if (search.length < input_length)
+    #     puts "Expanding Query"
+    #     indx = rand(query.length)
+    #     abandoned << query[indx]
+    #     query.reject! { |q| query.index(q) == indx }
+    #     if (query.length == 0)
+
+    #     end
+    #   else
+    #     break
+    #   end
+    # end
     if (search.length <= 0)
       puts "Couldn't satisfy query"
     else
@@ -100,6 +127,23 @@ class Playlist < ActiveRecord::Base
     end
   end
 
+  def get_data
+    #return a hash including the name and relevant data
+    return_hash = {name: self.name, length: self.songs.length, data: self.get_averages}
+  end
+
+  def get_averages
+    #return a hash of averageable data
+    relevant_columns = Song.columns.select do |col|
+      col.type == :float
+    end
+    average_hash = {}
+    relevant_columns.each do |col|
+      average_hash[col.name] = self.average(col.name)
+    end
+    average_hash
+  end
+
   def average(feature)
     #returns an average based on quality
     #only for float qualities, passed as symbols
@@ -112,12 +156,42 @@ class Playlist < ActiveRecord::Base
     #compares each value against the average, returns the average deviation
     #determines varience via squaring the difference, giving weight to extreme differences
     #the lower the value, the more consistent the quality
-    avg = self.average(quality)
+    avg = self.average(feature)
     return_value = self.songs.inject(0) do |sum, song|
       sum + (avg - song.send("#{feature}")).abs2
     end
     return_value = return_value / self.songs.length
-    return_value * 100
+    return_value
+  end
+
+  def analyze_for_tags
+    #compares the averages against deviation, returns tags which may describe playlist
+    #weighs outliers appropriately -- eg: may not assign a "happy" tag to a playlist with nine ABBA songs and one Cradle of Filth
+    #currently ignores averages with deviations above 5%
+    tags = []
+    tag_it(tags, :danceability, true, "dancing")
+    tag_it(tags, :valence, true, "happy")
+    tag_it(tags, :valence, false, "melancholy")
+    tag_it(tags, :energy, true, "energetic")
+    tag_it(tags, :energy, false, "chill")
+    tag_it(tags, :instrumentalness, true, "instrumental")
+    tag_it(tags, :speechiness, true, "lyrical")
+    tag_it(tags, :acousticness, true, "unplugged")
+    tag_it(tags, :liveness, true, "live")
+    tags
+  end
+
+  def tag_it(array, feature, is_high, tag)
+    #helper method for #analyze_for_tags
+    if (feature == :tempo)
+      if ((is_high && average(:tempo) >= 125) || (!is_high && average(:tempo) <= 115))
+        array < tag
+      end
+    elsif ((self.average(feature) >= 0.6 && is_high) || (self.average(feature) <= 0.4 && !is_high))
+      if (self.consistent(feature) <= 0.05)
+        array << tag
+      end
+    end
   end
 
   def needs_more_cowbell
