@@ -149,6 +149,22 @@ class Playlist < ActiveRecord::Base
     return_value
   end
 
+  def distribution_by_feature(feature)
+    #ideally for pie charts, returns a count
+    return_hash = {positive: 0, negative: 0, neutral: 0}
+    self.songs.each do |song|
+      if feature_is_sufficient?(feature, true)
+        return_hash[:positive] += 1
+      elsif feature_is_sufficient?(feature, false)
+        return_hash[:negative] += 1
+      else
+        return_hash[:neutral] += 1
+      end
+    end
+
+    return_hash
+  end
+
   def analyze_for_tags
     #compares the averages against deviation, returns tags which may describe playlist
     #weighs outliers appropriately -- eg: may not assign a "happy" tag to a playlist with nine ABBA songs and one Cradle of Filth
@@ -168,12 +184,12 @@ class Playlist < ActiveRecord::Base
 
   def tag_it(array, feature, more, tag)
     #helper method for #analyze_for_tags
-    if (feature_is_sufficient(feature, more) && self.consistent(feature) <= 0.05)
+    if (feature_is_sufficient?(feature, more) && self.consistent(feature) <= 0.05)
       array << tag
     end
   end
 
-  def feature_is_sufficient(feature, more)
+  def feature_is_sufficient?(feature, more)
     # Determines if the average of a feature is sufficient to be considered of that tag
 
     evaluator = (more ? ">= 0.6" : "<= 0.4")
@@ -213,7 +229,7 @@ class Playlist < ActiveRecord::Base
 
       puts ("Total #{loop_count}")
 
-      break if (feature_is_sufficient(feature, more) || loop_count >= songs.length * percent)
+      break if (feature_is_sufficient?(feature, more) || loop_count >= songs.length * percent)
     end
   end
 
