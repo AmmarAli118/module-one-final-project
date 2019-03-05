@@ -197,4 +197,35 @@ class Playlist < ActiveRecord::Base
   def needs_more_cowbell
     self.songs << Song.find_or_create(name: "Don't Fear The Reaper")
   end
+# ######### change index to playlist_index
+
+  # add_song
+  def add_song(song)
+    self.songs << song
+    song_in_playlist = self.playlist_songs.last
+    song_in_playlist.playlist_index = self.playlist_songs.length
+    song_in_playlist.save
+  end
+
+  # delete_song
+  def delete_song(song)
+    self.songs.delete(song)
+  end
+
+  # order_playlist
+  def order_playlist
+    # returns an array of songs in index order
+
+  end
+
+  # shuffle_song
+  def shuffle_song
+
+  end
+
+  # update_playlist_index
+  def update_playlist_index
+
+  end
+
 end
