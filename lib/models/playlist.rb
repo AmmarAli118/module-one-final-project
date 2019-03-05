@@ -97,7 +97,6 @@ class Playlist < ActiveRecord::Base
     nil
   end
 
-
   def display_with_details
     #puts the song details
     self.display do |song|
@@ -212,7 +211,9 @@ class Playlist < ActiveRecord::Base
 
       loop_count += 1
 
-      break if (feature_is_sufficient(feature, more) || loop_count >= songs.length / 2)
+      puts ("Total #{loop_count}")
+
+      break if (feature_is_sufficient(feature, more) || loop_count >= songs.length * percent)
     end
   end
 
