@@ -96,6 +96,7 @@ class Playlist < ActiveRecord::Base
     nil
   end
 
+
   def display_with_details
     #puts the song details
     self.display do |song|

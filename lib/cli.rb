@@ -74,9 +74,13 @@ class CLI
     make_box("Generate Playlist\nEnter name for playlist:\nEnter number of songs:")
 
     playlist_name = gets.chomp!
+    playlist_size = gets.chomp!
     array_of_tags = tag_selection
     #new_playlist = generate_new_playlist
+    new_playlist = Playlist.generate(playlist_name, array_of_tags, playlist_size.to_i)
     input = gets.chomp!
+    display_playlist(new_playlist)
+
   end
 
   def tag_selection
@@ -122,8 +126,35 @@ class CLI
   end
 
   def view_all_playlists
-    make_box("All Playlist")
+    all_playlist = Playlist.all
+    all_playlist_string = "Enter Number To View: \n"
+    i = 1
+    all_playlist.each do | playlist |
+      all_playlist_string += "#{i}.#{playlist.name}\n"
+      i += 1
+    end
+
+    box = TTY::Box.frame(width: 100, height:14, border: :thick, title: {top_left: "TITLE"},
+      style: {
+        fg: :white,
+        bg: :black,
+        border: {
+          fg: :green,
+          bg: :black
+        }
+        }) do
+          all_playlist_string
+        end
+    print box
     input = gets.chomp!
+    i = 1
+    all_playlist.each do | playlist |
+      if input.to_i == i
+        display_playlist(playlist)
+        break
+      end
+      i += 1
+    end
   end
 
   def find_playlist
@@ -136,27 +167,33 @@ class CLI
     display_playlist(playlist_array)
   end
 
-  def display_playlist(playlist_array)
+  def display_playlist(playlist)
     playlist_info = {"acoustic" => 0.77, "dancing" => 0.34, "energetic" => 0.67,
     "instrumental" => 0.13, "live" => 0.22, "lyrical" => 0.45,
     "fast" => 0.65, "happy" => 0.23, "melancholy" => 0.56, "slow" => 0.34,
     "chill" => 0.45}
-    print_bargraph(playlist_info)
-    playlist_song_array = []
-    i = 1
-    29.times {
-      playlist_song_array << "song#{i}"
-      i += 1
-    }
+    playlist_data = playlist.get_data
 
-    print_playlist_songs(playlist_song_array)
+    print_bargraph(playlist_data[:data], playlist_data[:name])
+    playlist_song_array = []
+    # i = 1
+    # 29.times {
+    #   playlist_song_array << "song#{i}"
+    #   i += 1
+    # }
+    playlist.songs.each do | song |
+      playlist_song_array << "#{song.title}"
+    end
+
+    print_playlist_songs(playlist_song_array, playlist_data[:name])
   end
 
-  def print_playlist_songs(playlist_song_array)
+  def print_playlist_songs(playlist_song_array, playlist_name)
     songs_string = ""
+    songs_string += "#{playlist_name}\n"
     i = 0
     while i < (playlist_song_array.length)
-      songs_string += "#{i+1}. #{playlist_song_array[i]}\t"
+      songs_string += "#{i+1}.#{playlist_song_array[i]}  \t\t"
       if ((i+1) % 3 ) == 0
         songs_string += "\n"
       end
@@ -205,14 +242,14 @@ class CLI
     print_bargraph(playlist_info)
   end
 
-  def print_bargraph(playlist_info)
+  def print_bargraph(playlist_data, playlist_name)
     system "clear"
     bargraph_string = ""
-    bargraph_string += "Test Playlist\n"
+    bargraph_string += "#{playlist_name}\n"
     i = 9
     while i >= 0
       bargraph_string += "#{i} |"
-      playlist_info.each do | key, value |
+      playlist_data.each do | key, value |
         if (value * 10).round >= i
           (key.length).times do
             bargraph_string += "-"
@@ -229,7 +266,7 @@ class CLI
       bargraph_string += "\n"
       i -= 1
     end
-    bargraph_string += "   acoustic dancing energetic instrumental live lyrical fast happy melancholy slow chill \n"
+    bargraph_string += "   acousticness danceability energy instrumentalness liveness speechiness fast happy melancholy slowness chill \n"
     box = TTY::Box.frame(width: 100, height:14, border: :thick, title: {top_left: "TITLE"},
       style: {
         fg: :white,
