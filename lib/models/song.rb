@@ -20,7 +20,7 @@ class Song < ActiveRecord::Base
   end
 
   def add_to_playlist(playlist)
-    playlist.songs << self
+    playlist.add_song(self)
   end
 
   def song_data
