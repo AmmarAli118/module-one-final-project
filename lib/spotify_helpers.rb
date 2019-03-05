@@ -1,62 +1,63 @@
-#Key Stuffs
-# module SpotifyHelpers
-# require 'pry'
-# require 'rspotify'
-  def authenticate
-    RSpotify.authenticate(API_KEY, API_SECRET)
+#Spotify Helpers
+
+# score
+def score(value)
+  # returns a percent value of a float between 0 and 1
+  "#{(value * 100).round(2)}%"
+end
+
+# key_letter
+def key_letter(key_num)
+ keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+ keys[key_num]
+end
+
+# song_key
+def song_key(key_mode)
+ key_mode == 1 ? "Major" : "Minor"
+end
+
+# get_playlist_by_search
+def get_playlist_by_search(search_term)
+  # authenticate
+  RSpotify.authenticate(API_KEY, API_SECRET)
+  # returns first playlist matching search term
+  RSpotify::Playlist.search(search_term, limit: 1).first
+end
+
+# seed_data
+def seed_data(spotify_playlist, genre)
+  # initialize new Playlist in database
+  db_playlist = Playlist.create(name: "#{genre.capitalize} Playlist")
+
+  # iterate through each Track object
+  spotify_playlist.tracks.each do |track|
+
+    # create instance variables for legibility
+    name = track.name
+    artist = track.artists.first.name
+    album = track.album.name
+    features = track.audio_features
+
+    # creates new song instance with api data
+    song = Song.find_or_create_by(
+      title: name,
+      artist: artist,
+      album: album,
+      genre: genre,
+      duration: features.duration_ms,
+      key: features.key,
+      mode: features.mode,
+      acousticness: features.acousticness,
+      danceability: features.danceability,
+      energy: features.energy,
+      instrumentalness: features.instrumentalness,
+      liveness: features.liveness,
+      speechiness: features.speechiness,
+      valence: features.valence,
+      tempo: features.tempo
+    )
+    # add new song to playlist
+    song.add_to_playlist(db_playlist)
   end
-
-  def key_letter(key_num)
-   keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-   keys[key_num]
-  end
-
-  def song_key(key_mode)
-   key_mode == 1 ? "Major" : "Minor"
-  end
-
-  def print_songs_with_key(song_array)
-    song_array.each do | track |
-      print "#{track.name} --- "
-      track.artists.each{|artist| print artist.name}
-      print "#{print_key(track.audio_features.key, track.audio_features.mode)}"
-      puts ""
-    end
-    " "
-  end
-
-  def print_songs(array)
-    array.each do | track |
-      print "#{track.name} --- "
-      track.artists.each{|artist| print artist.name}
-      #print " --- Key: #{track.audio_features.key} , Energy: #{track.audio_features.energy}, Danceability: #{track.audio_features.danceability}"
-      puts ""
-    end
-    " "
-  end
-
-  def sort_track_array_by_popular(track_array)
-    track_array.sort_by do | track |
-      track.popularity
-    end
-  end
-
-  # get_tracks_from_playlist
-  # def get_tracks_from_playlist(playlist)
-  #   # returns an array of tracks
-  #   playlist.tracks
-  # end
-
-  # def get_sample_array(term)
-  #   #searchs for first 5 playlist and puts them in a song array
-  #   sample = []
-  #   playlists = RSpotify::Playlist.search(term, limit: 1)
-  #   playlists.each do | playlist |
-  #     # sample << get_tracks_from_playlist(playlist)
-  #     sample << playlist.tracks
-  #   end
-  #   sample.uniq
-  # end
-  #
-  # binding.pry
-  # 0
+end
