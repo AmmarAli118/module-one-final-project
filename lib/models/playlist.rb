@@ -195,6 +195,8 @@ class Playlist < ActiveRecord::Base
 
   # add_song
   def add_song(song)
+    # adds song to playlist and creates index based on number of
+    # songs in the playlist
     self.songs << song
     song_in_playlist = self.playlist_songs.last
     song_in_playlist.playlist_index = self.playlist_songs.length
@@ -204,6 +206,7 @@ class Playlist < ActiveRecord::Base
   # delete_song
   def delete_song(song)
     # gets the index of the song to be deleted
+    # this should be refactored with a Song#get_playlist_index method
     deleted_index = self.playlist_songs.find_by(song_id: song.id).playlist_index
     # deletes song and reorders remaining tracks
     self.songs.delete(song)
@@ -219,6 +222,7 @@ class Playlist < ActiveRecord::Base
 
   # shuffle_song
   def shuffle_songs
+    # shuffles songs and returns playlist
     shuffled_songs = self.playlist_songs.shuffle
     shuffled_songs.each_with_index do |song, index|
       song.playlist_index = index + 1
@@ -226,5 +230,4 @@ class Playlist < ActiveRecord::Base
     end
     self
   end
-
 end

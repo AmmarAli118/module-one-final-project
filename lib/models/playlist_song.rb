@@ -16,7 +16,7 @@ class PlaylistSong < ActiveRecord::Base
 
   # reorder_from_index
   def self.reorder_from_index(deleted_index)
-    # renumbers all songs after deleted song
+    # renumbers all songs in a playlist after a deleted song
     PlaylistSong.where("playlist_index > ?", deleted_index).each do |playlist_song|
       playlist_song.up_index
     end
