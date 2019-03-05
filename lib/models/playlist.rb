@@ -218,8 +218,13 @@ class Playlist < ActiveRecord::Base
   end
 
   # shuffle_song
-  def shuffle_song
-    shuffled_songs = self.order_playlist.shuffle
+  def shuffle_songs
+    shuffled_songs = self.playlist_songs.shuffle
+    shuffled_songs.each_with_index do |song, index|
+      song.playlist_index = index + 1
+      song.save
+    end
+    self
   end
 
 end
