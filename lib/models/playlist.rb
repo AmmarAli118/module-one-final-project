@@ -271,6 +271,32 @@ class Playlist < ActiveRecord::Base
     self
   end
 
+  def valid_index?(playlist_index)
+    playlist_index <= self.playlist_songs.length && playlist_index > 0
+  end
+
+  def change_index(old_index, new_index)
+    if valid_index?(old_index) && valid_index?(new_index) && old_index != new_index
+      # gets the PlaylistSong index of the song to be moved
+      changed_song = self.playlist_songs.find_by(playlist_index: old_index)
+      if old_index > new_index
+        # gets an array of songs affected by the shift
+        songs_to_shift = self.ordered_playlist_songs[(new_index-1)..(old_index-1)]
+        songs_to_shift.each {|song| song.down_index}
+      elsif old_index < new_index
+        # gets an array of songs affected by the shift
+        songs_to_shift = self.ordered_playlist_songs[(old_index-1)..(new_index-2)]
+        songs_to_shift.each {|song| song.up_index}
+      end
+      # update song's playlist_index
+      changed_song.playlist_index = new_index
+      changed_song.save
+    end
+    return self
+  end
+
+
+
   ### HERE BEGINS METHOD PURGATORY ###
 
   def analyze_for_tags
