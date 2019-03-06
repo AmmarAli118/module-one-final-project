@@ -29,7 +29,7 @@ class CLI
 
   def make_box(text)
     system "clear"
-    box = TTY::Box.frame(width: 50, height:10, border: :thick, title: {top_left: "TITLE"},
+    box = TTY::Box.frame(width: 50, height:10, border: :thick, title: {top_left: "SPOPTIMIZER"},
       style: {
         fg: :white,
         bg: :black,
@@ -46,7 +46,7 @@ class CLI
 
   def make_large_box(text)
     system "clear"
-    box = TTY::Box.frame(width: 100, height:15, border: :thick, title: {top_left: "TITLE"},
+    box = TTY::Box.frame(width: 100, height:15, border: :thick, title: {top_left: "SPOPTIMIZER"},
       style: {
         fg: :white,
         bg: :black,
@@ -72,7 +72,7 @@ class CLI
     end
 
     system "clear"
-    box = TTY::Box.frame(width: longest_line, height: new_line_count, border: :thick, title: {top_left: "TITLE"},
+    box = TTY::Box.frame(width: longest_line, height: new_line_count, border: :thick, title: {top_left: "SPOPTIMIZER"},
       style: {
         fg: :white,
         bg: :black,
@@ -172,17 +172,53 @@ class CLI
     array_of_tags
   end
 
-  def view_all_playlists
+  def display_all_playlist
     all_playlist = Playlist.all
-    all_playlist_string = "Enter Number To View: \n"
+    all_playlist_string = ""
     i = 1
     all_playlist.each do | playlist |
       all_playlist_string += "#{i}.#{playlist.name}\n"
       i += 1
     end
 
+    all_playlist_string
+  end
+
+  def delete_playlist
+    all_playlist_string = "Enter Number To Delete: \n"
+    all_playlist_string += display_all_playlist
+    all_playlist_string += "--------------\n"
     make_large_box(all_playlist_string)
     input = gets.chomp!
+
+    i = 1
+    (Playlist.all).each do | playlist |
+      if input.to_i == i
+        Playlist.delete(playlist)
+        break
+      end
+      i += 1
+    end
+  end
+
+  def view_all_playlists
+    all_playlist = Playlist.all
+    # all_playlist_string = "Enter Number To View: \n"
+    # i = 1
+    # all_playlist.each do | playlist |
+    #   all_playlist_string += "#{i}.#{playlist.name}\n"
+    #   i += 1
+    # end
+    all_playlist_string = "Enter Number To View: \n"
+    all_playlist_string += display_all_playlist
+    all_playlist_string += "--------------\n"
+    all_playlist_string += "a) Delete a Playlist"
+
+    make_large_box(all_playlist_string)
+    input = gets.chomp!
+    if input == "a" || input == "delete a playlist"
+      delete_playlist
+    end
 
     i = 1
     all_playlist.each do | playlist |
@@ -207,7 +243,7 @@ class CLI
   def display_playlist(playlist)
     playlist_data = playlist.get_data
 
-    print_bargraph(playlist_data[:data], playlist_data[:name])
+    #print_bargraph(playlist_data[:data], playlist_data[:name])
     playlist_song_array = []
 
     playlist.songs.each do | song |
@@ -215,7 +251,7 @@ class CLI
     end
 
     songs_string = print_playlist_songs(playlist_song_array, playlist_data[:name])
-    songs_string += "\n\na)Add Song  b) Remove Song\n"
+    songs_string += "\n\na)Add Song  b) Remove Song c) Optimize Playlist d) Data e) Reorder\n"
     #make_large_box(songs_string)
     make_versatile_box(songs_string)
 
@@ -225,7 +261,22 @@ class CLI
       add_song_to_playlist(playlist)
     elsif input == "b" || input == "remove song"
       remove_song_from_playlist(playlist)
+    elsif input == "c" || input == "optimize playlist"
+      optimize_playlist(playlist)
+    elsif input == "d" || input == "data"
+      #display_data(playlist)
+      print_bargraph(playlist_data[:data], playlist_data[:name])
+    elsif input == "e" || input == "reorder"
+      reorder_playlist(playlist)
     end
+  end
+
+  def display_data(playlist)
+
+  end
+
+  def reorder_playlist(playlist)
+
   end
 
   def add_song_to_playlist(playlist)
@@ -240,6 +291,28 @@ class CLI
     make_large_box(songs_string)
     input = gets.chomp!
     input.downcase!
+
+    new_song = song_search(input)
+    playlist.add_song(new_song)
+    # new_song = Song.find_by(name: input)
+    #possible_songs = Song.where("title LIKE '%#{input}%'")
+  end
+
+  def song_search(input)
+    songs_string = "\nEnter number of the song you want to add: \n"
+
+    i = 1
+    possible_songs = Song.where("title LIKE '%#{input}%'")
+    possible_songs.each do | song |
+      songs_string += "#{i}. #{song.title} - #{song.artist}\n"
+      i += 1
+    end
+
+    make_large_box(songs_string)
+    new_input = gets.chomp!
+    new_input.downcase!
+
+    possible_songs[(new_input.to_i - 1)]
   end
 
   def remove_song_from_playlist(playlist)
@@ -254,6 +327,36 @@ class CLI
     make_large_box(songs_string)
     input = gets.chomp!
     input.downcase!
+
+    song_to_delete = nil
+    playlist.songs.each do | song |
+      if (song.title).downcase! == input
+        song_to_delete = song
+      end
+    end
+    if song_to_delete != nil
+      playlist.delete_song(song_to_delete)
+    end
+  end
+
+  def optimize_playlist(playlist)
+    playlist_data = playlist.get_data
+    playlist_song_array = []
+    playlist.songs.each do | song |
+      playlist_song_array << "#{song.title}"
+    end
+
+    songs_string = print_playlist_songs(playlist_song_array, playlist_data[:name])
+    optimize_prompt = "Optimize Playlist\nEnter a feature to optimize: \n-acousticness -danceability -energy\n-instrumentalness -liveness -speechiness\n-valence   -tempo\n"
+    optimize_prompt += songs_string
+
+    make_versatile_box(optimize_prompt)
+    input = gets.chomp!
+    input.downcase!
+    #specific feature by col title
+    #percent is a float less than 0
+    #more is a boolean to determine if you want less or more
+    playlist.optimize(feature, percent, more)
   end
 
   def print_playlist_songs(playlist_song_array, playlist_name)
@@ -267,6 +370,7 @@ class CLI
       end
       i += 1
     end
+    songs_string += "\n---------------------------"
     songs_string
   end
 
@@ -306,18 +410,23 @@ class CLI
     while i >= 0
       bargraph_string += "#{i} |"
       playlist_data.each do | key, value |
-        if (value * 10).round >= i
-          (key.length).times do
-            bargraph_string += "-"
+        if key != "tempo"
+          if (value * 10).round >= i
+            (key.length).times do
+              bargraph_string += "-"
+            end
+            #bargraph_string += "   -   "
+          else
+            # bargraph_string += "        "
+            (key.length).times do
+              bargraph_string += " "
+            end
           end
-          #bargraph_string += "   -   "
-        else
-          # bargraph_string += "        "
-          (key.length).times do
-            bargraph_string += " "
-          end
+          bargraph_string += " "
         end
-        bargraph_string += " "
+      end
+      if i == 0
+        bargraph_string += " #{playlist_data["tempo"].round}"
       end
       bargraph_string += "\n"
       i -= 1
