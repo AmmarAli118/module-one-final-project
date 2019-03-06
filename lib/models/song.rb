@@ -15,6 +15,10 @@ class Song < ActiveRecord::Base
     self.instance_values
   end
 
+  def short_title
+    song.title.truncate(30)
+  end
+
   def display(include_title = true)
     #puts the song details
     self.attributes.map do |name, value|
