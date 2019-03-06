@@ -2,7 +2,7 @@ class Song < ActiveRecord::Base
   has_many :playlist_songs
   has_many :playlists, through: :playlist_songs
 
-  def top_songs_by_feature(feature)
+  def self.top_songs_by_feature(feature)
     #returns top ten by feature
     Song.all.order(feature, :desc)[0..9]
   end

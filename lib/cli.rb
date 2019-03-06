@@ -409,7 +409,10 @@ class CLI
     input = gets.chomp!
     input.downcase!
     #search for playlist
-    display_song(song_search(input))
+    result = song_search(input)
+    if result != 0
+      display_song(result)
+    end
   end
   #creates a formatted string of possible songs based on user input
   def song_search(input)
@@ -417,6 +420,12 @@ class CLI
 
     i = 1
     possible_songs = Song.where("title LIKE '%#{input}%'")
+    if possible_songs.empty?
+      playlist_string = "No results found."
+      make_large_box(playlist_string)
+      gets.chomp!
+      return 0
+    end
     possible_songs.each do | song |
       songs_string += "#{i}. #{song.title} - #{song.artist}\n"
       i += 1
