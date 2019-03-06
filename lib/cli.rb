@@ -1,10 +1,10 @@
 #This fixes some of the logger issues -- if you're still having them, enter this in console
-ActiveRecord::Base.logger.level= 1
+# ActiveRecord::Base.logger.level= 1
 
 class CLI
   attr_accessor :username
   #box = TTY::Box.frame(width: 30, height:10, title: {top_left: "TITLE"})
-  
+
   def run
     exit_flag = false
 
@@ -136,7 +136,7 @@ class CLI
     tags = {"acoustic" => "☐ acoustic", "dancing" => "☐ dancing", "energetic" => "☐ energetic",
     "instrumental" => "☐ instrumental", "live" => "☐ live", "lyrical" => "☐ lyrical",
     "fast" => "☐ fast", "happy" => "☐ happy", "melancholy" => "☐ melancholy", "slow" => "☐ slow",
-    "chill" => "☐ chill", "country" => "☐ country", "rock" => "☐ rock", "pop" => "☐ pop", 
+    "chill" => "☐ chill", "country" => "☐ country", "rock" => "☐ rock", "pop" => "☐ pop",
     "classical" => "☐ classical", "rap" => "☐ rap", "jazz" => "☐ jazz"}
 
     array_of_tags = []
