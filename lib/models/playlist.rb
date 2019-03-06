@@ -254,21 +254,24 @@ class Playlist < ActiveRecord::Base
     self.playlist_songs.reorder_from_index(deleted_index)
   end
 
-  # order_playlist
-  def order_playlist
-    # returns an array of songs in index order
-    playlist_songs = self.playlist_songs.order(:playlist_index)
-    playlist_songs.map { |playlist_song| playlist_song.song }
+  # playlist_songs
+  def ordered_playlist_songs
+    # adds to existing ruby method and orders by playlist_index
+    self.playlist_songs.order(:playlist_index)
   end
 
-  def print_playlist
-    self.playlist_songs.each {|song| puts "#{song} #{song.title}"}
+  # order_playlist
+  def songs_in_order
+    # returns an array of songs in index order
+    # playlist_songs = self.playlist_songs.order(:playlist_index)
+    ordered_playlist_songs.map { |playlist_song| playlist_song.song }
   end
 
   # shuffle_song
   def shuffle_songs
     # shuffles songs and returns playlist
     shuffled_songs = self.playlist_songs.shuffle
+    # REFACTOR with .update
     shuffled_songs.each_with_index do |song, index|
       song.playlist_index = index + 1
       song.save
@@ -276,7 +279,27 @@ class Playlist < ActiveRecord::Base
     self
   end
 
-  def move_playlist_index(old_index, new_index)
-    
+  def valid_index?(playlist_index)
+    playlist_index <= self.playlist_songs.length && playlist_index > 0
+  end
+
+  def change_index(old_index, new_index)
+    if valid_index?(old_index) && valid_index?(new_index) && old_index != new_index
+      # gets the PlaylistSong index of the song to be moved
+      changed_song = self.playlist_songs.find_by(playlist_index: old_index)
+      if old_index > new_index
+        # gets an array of songs affected by the shift
+        songs_to_shift = self.ordered_playlist_songs[(new_index-1)..(old_index-1)]
+        songs_to_shift.each {|song| song.down_index}
+      elsif old_index < new_index
+        # gets an array of songs affected by the shift
+        songs_to_shift = self.ordered_playlist_songs[(old_index-1)..(new_index-2)]
+        songs_to_shift.each {|song| song.up_index}
+      end
+      # update song's playlist_index
+      changed_song.playlist_index = new_index
+      changed_song.save
+    end
+    return self
   end
 end

@@ -41,6 +41,11 @@ class PlaylistSong < ActiveRecord::Base
     # renumbers all songs in a playlist after a deleted song
     PlaylistSong.where("playlist_index > ?", deleted_index).each do |playlist_song|
       playlist_song.up_index
+
+      # RAW SQL:
+      # UPDATE playlist_songs SET playlist_index = playlist_index + 1 WHERE playlist_index >= 2;
+      # ALTERNATE CODE:
+      # PlaylistSong.where("playlist_index > ?", deleted_index).update_all("playlist_index = playlist_index + 1")
     end
   end
 end

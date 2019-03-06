@@ -13,6 +13,7 @@ class Song < ActiveRecord::Base
     playlist.add_song(self)
   end
 
+# NOT FINISHED
   def song_data
     self.instance_values
   end
