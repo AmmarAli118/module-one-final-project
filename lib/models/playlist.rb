@@ -275,4 +275,8 @@ class Playlist < ActiveRecord::Base
     end
     self
   end
+
+  def move_playlist_index(old_index, new_index)
+    
+  end
 end
