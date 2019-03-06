@@ -54,22 +54,12 @@ class CLI
       when "2", "view all playlists"
         view_all_playlists
       when "3", "find playlist"
-        make_large_box("Find Playlist\nEnter name of playlist:")
-        input = gets.chomp!
-        input.downcase!
-        #search for playlist
-        display_playlist(playlist_search(input))
+        find_playlist
       when "4", "create playlist"
         create_playlist
     end
   end
 
-  def create_playlist
-    make_large_box("Create Playlist\nEnter name for playlist:")
-    playlist_name = gets.chomp!
-    new_playlist = Playlist.create(name: playlist_name)
-    add_song_to_playlist(new_playlist)
-  end
   #generate playlist page
   def generate_playlist
     make_large_box("Generate Playlist\nEnter name for playlist:\nEnter number of songs:")
@@ -78,14 +68,12 @@ class CLI
     playlist_size = gets.chomp!
 
     #Take the user to the tag selection page and retrieve there choices
-    array_of_tags = tag_selection
+    array_of_tags = prompt_user_for_tag_selection
     if array_of_tags.class == String
       return 0
     end
     #generate the new palylist
     new_playlist = Playlist.generate(playlist_name, array_of_tags, playlist_size.to_i)
-
-    input = gets.chomp!
     display_playlist(new_playlist)
 
   end
@@ -93,7 +81,7 @@ class CLI
   #displays categories to user and gets there selection, some choices are binary and will only allow user to have
   #one selected at a time
 
-  def tag_selection
+  def prompt_user_for_tag_selection
     input = ""
     input_done = false
 
@@ -144,6 +132,21 @@ class CLI
       end
     end
     array_of_tags
+  end
+
+  def find_playlist
+    make_large_box("Find Playlist\nEnter name of playlist:")
+    input = gets.chomp!
+    input.downcase!
+    #search for playlist
+    display_playlist(playlist_search(input))
+  end
+
+  def create_playlist
+    make_large_box("Create Playlist\nEnter name for playlist:")
+    playlist_name = gets.chomp!
+    new_playlist = Playlist.create(name: playlist_name)
+    add_song_to_playlist(new_playlist)
   end
 
   #helper method that returns an array of all playlist names
@@ -228,7 +231,8 @@ class CLI
   #display methods for an individual playlist
   ######################################
   #Page for displating a singular playlist
-  def display_playlist(playlist)
+  def display_playlist(playlist, page_number = 0)
+    #used for exiting display playlist in event of error or user exiting
     if playlist == 0
       return 0
     end
@@ -238,10 +242,14 @@ class CLI
       playlist_song_array << "#{song.title} - #{song.artist}"
     end
 
-    songs_string = "#{playlist.name}\n"
+    songs_string = "#{playlist.name} - Size: #{playlist_song_array.length}\n"
     #songs_string = print_playlist_songs(playlist_song_array, playlist.name)
-    songs_string += columnize_song_name_array(playlist_song_array)
-    songs_string += "\n\na)Add Song  b) Remove Song c) Optimize Playlist d) Data e) Reorder\n"
+    #songs_string += columnize_song_name_array(playlist_song_array)
+
+    #pages is an array of string arrays
+    pages = split_song_array_into_pages(playlist_song_array)
+    songs_string += get_page_string(pages, page_number)
+    songs_string += "\n\na)Add Song  b) Remove Song c) Optimize Playlist d) Data e) Reorder f) Previos Page g) Next Page\n"
     make_versatile_box(songs_string)
 
     input = gets.chomp!
@@ -256,6 +264,14 @@ class CLI
       display_data(playlist)
     elsif input == "e" || input == "reorder"
       reorder_playlist(playlist)
+    elsif input == "f" || input == "previos page"
+      if page_number > 0
+        display_playlist(playlist, page_number-1)
+      end
+    elsif input == "g" || input == "next page"
+      if page_number < (pages.length - 1)
+        display_playlist(playlist, page_number+1)
+      end
     end
   end
 
@@ -273,17 +289,19 @@ class CLI
 
   #Displays page for adding a song to a playlist
   def add_song_to_playlist(playlist)
-    playlist_song_array = get_array_of_playlist_song_names(playlist)
+    #playlist_song_array = get_array_of_playlist_song_names(playlist)
 
     songs_string = "#{playlist.name}\n"
-    songs_string += columnize_song_name_array(playlist_song_array)
+    #songs_string += columnize_song_name_array(playlist_song_array)
     songs_string += "\nEnter name of song you want to add: \n"
     make_large_box(songs_string)
     input = gets.chomp!
     input.downcase!
 
     new_song = song_search(input)
-    playlist.add_song(new_song)
+    if new_song != 0
+      playlist.add_song(new_song)
+    end 
     display_playlist(playlist)
   end
   #helper method for returning an array of song names
@@ -302,7 +320,7 @@ class CLI
     songs_string = "#{playlist.name}\n"
     songs_string += columnize_song_name_array(playlist_song_array)
     songs_string += "\nEnter name of song you want to remove: \n"
-    make_large_box(songs_string)
+    make_versatile_box(songs_string)
     input = gets.chomp!
     input.downcase!
 
@@ -380,11 +398,14 @@ class CLI
 
     tags.each do | tag |
       if input == tag
-        top_songs_string = "Top Songs for #{tag}: \n"
-        # Song.top.each do | song |
-        #   top_songs_string << "#{song}\n"
+        # top_songs_string = "Top Songs for #{tag}: \n"
+        # top_songs_array = []
+        # Song.top_songs_by_feature(tag) do | song |
+        #   top_songs_array << "#{song.title}"
         # end
-        make_large_box(top_songs_string)
+        # top_songs_string += columnize_song_name_array(top_songs_array, true, 1)
+        # make_large_box(top_songs_string)
+        gets.chomp!
       end
     end
   end
@@ -537,13 +558,13 @@ class CLI
   #-------------------------------
   #Methods for formating output
   #-------------------------------
-  def columnize_song_name_array(song_name_array, numbered_items = true, columns = 2)
+  def columnize_song_name_array(song_name_array, numbered_items = true, columns = 2, numbering_start = 0)
     formatted_string = ""
     longest_song_name_length = get_length_longest_name_in_array(song_name_array) + 5
     i = 0
     while i < (song_name_array.length)
       if numbered_items
-        list_item = "#{i+1}.#{song_name_array[i]}"
+        list_item = "#{numbering_start+1}.#{song_name_array[i]}"
       else
         list_item = "#{song_name_array[i]}"
       end
@@ -555,8 +576,9 @@ class CLI
         formatted_string += "\n"
       end
       i += 1
+      numbering_start += 1
     end
-    formatted_string += "\n---------------------------"
+    formatted_string += "\n-----------------------------------------"
     formatted_string
   end
   #helper method for getting length of longest name in array
@@ -568,6 +590,48 @@ class CLI
       end
     end
     longest_song_name_length
+  end
+
+  def get_page_string(pages, page_number)
+    #display playlist
+    number_start_for_columnizer = page_number*20
+    page_string = ""
+    page_string += columnize_song_name_array(pages[page_number], true, 2, number_start_for_columnizer)
+    page_string += "\nPage: "
+    i = 0
+    (pages.length).times do
+      if i == page_number
+        page_string += "|*#{page_number + 1}*|"
+        i += 1
+      else
+        page_string += "| #{i + 1} |"
+        i += 1
+      end
+    end
+    page_string += "\n-----------------------------------------"
+    page_string
+  end
+
+  #Method for splitting song arrays into pages
+  def split_song_array_into_pages(song_name_array, lines_per_page = 10, columns = 2)
+    #split into chunks
+    pages =[]
+    items_per_page = 0
+    new_page = []
+    song_name_array.each do | song_name |
+      if items_per_page < (lines_per_page * columns)
+        new_page << song_name
+        items_per_page += 1
+      else
+        pages << new_page
+        new_page = []
+        new_page << song_name
+        items_per_page = 1
+      end
+    end
+    pages << new_page
+
+    pages
   end
 
   #--------------------------------
