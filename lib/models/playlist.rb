@@ -4,14 +4,21 @@ class Playlist < ActiveRecord::Base
 
   def self.generate(p_name, attributes, input_length)
     #search through Songs and narrow by each attribute (passed in CLI by tags)
+    #Arguments:
+    # p_name-Name of Playlist(string),
+    # attributes-Array of attributes(strings),
+    # input_length--desired length of playlist(integer)
 
-    #   “acoustic” => “☐ acoustic”, “dancing” => “☐ dancing”, “energetic” => “☐ energetic”,
-    #  “instrumental” => “☐ instrumental”, “live” => “☐ live”, “lyrical” => “☐ lyrical”,
-    #  “fast” => “☐ fast”, “happy” => “☐ happy”, “melancholy” => “☐ melancholy”
+    #Steps:
+    # 1. Construct an array of SQL query-snippets based on attributes
+    # 2. Assemble a query using #build_query
+    # 3. Search the Database using query
+    # 4. Using Array#combination, expand query until search results match or surpass input_length
+    # 5. Create the Playlist instance, add its songs directly, save, and return it
 
     list = []
     query = []
-    # Creates a SQL query based on given tags
+    # Step 1
     attributes.each do |attribute|
       if (attribute == "acoustic")
         query << "acousticness >= 0.6"
@@ -50,14 +57,15 @@ class Playlist < ActiveRecord::Base
 
     query.uniq!
     search = []
-
+    #Step 2
     query_string = self.build_query(query)
+    #Step 3
     search.concat(Song.where(query_string))
     search.uniq!
     query_size = query.length
     while (query_size > 0)
       if (search.length < input_length)
-        #if the full query is not enough, find largest possible combination
+        #Step 4
         query_size -= 1
         new_queries = query.combination(query_size).to_a
         new_queries.each do |query|
@@ -74,9 +82,10 @@ class Playlist < ActiveRecord::Base
       puts "Couldn't satisfy query"
     else
       search = search.sample(input_length)
+      #Step 5
       playlist = Playlist.create
       search.each do |song|
-        playlist.songs << song
+        playlist.add_song(song)
       end
       playlist.name = p_name
       playlist.save
@@ -88,56 +97,42 @@ class Playlist < ActiveRecord::Base
     #helper method for generate
     #final form: "attr > .5 AND attr2 <= .4 AND (genre = genre1 OR genre = genre2)
     query_string = ""
-    genre_string = "("
+    genre_string = ""
 
     query.each do |q|
       if q[0] == "g"
-        if (genre_string.length > 1)
+        #Each song in the db has exactly one genre, so the query should search for these with OR
+        if (genre_string.length > 0)
           genre_string += " OR "
         end
         genre_string += q
       else
+        #Non-genre specifications should require AND
         if (query_string.length > 0)
           query_string += " AND "
         end
         query_string += q
       end
     end
-    return_string = "#{query_string} AND #{genre_string})"
+    if (genre_string != "")
+      return_string = "#{query_string} AND (#{genre_string})"
+    else
+      return_string = query_string
+    end
+    return_string
   end
 
   def genres
+    #returns all unique genres as an array of strings
     return songs.map { |song| song.genre }.uniq!
   end
 
-  def display
-    #Lists the songs
-    #May yield to provide more details
-    self.songs.each do |song|
-      puts "#{song.id}. #{song.title}"
-      yield(song)
-    end
-    nil
-  end
-
-  def display_with_details
-    #puts the song details
-    self.display do |song|
-      song.display(false)
-    end
-    nil
-  end
-
-  def display_feature(feature)
-    #puts the quality in a list "SongName: feature"
-    self.songs.map do |song|
-      puts "#{song.title}: #{song.send("#{feature}")}"
-    end
-  end
-
-  def get_data
-    #return a hash including the name and relevant data
-    return_hash = {name: self.name, length: self.songs.length, data: self.get_averages}
+  def average(feature)
+    #returns an average based on quality
+    #only for float qualities, passed as symbols
+    #eg: my_playlist.average(:danceability)
+    return_value = self.songs.inject(0) { |sum, song| sum + song.send("#{feature}") }
+    return_value / self.songs.length
   end
 
   def get_averages
@@ -152,28 +147,16 @@ class Playlist < ActiveRecord::Base
     average_hash
   end
 
-  def average(feature)
-    #returns an average based on quality
-    #only for float qualities, passed as symbols
-    #eg: my_playlist.average(:danceability)
-    return_value = self.songs.inject(0) { |sum, song| sum + song.send("#{feature}") }
-    return_value / self.songs.length
-  end
-
-  def get_deviation(feature)
-    #compares each value against the average, returns the average deviation
-    #determines varience via squaring the difference, giving weight to extreme differences
-    #the lower the value, the more consistent the quality
-    avg = self.average(feature)
-    return_value = self.songs.inject(0) do |sum, song|
-      sum + (avg - song.send("#{feature}")).abs2
-    end
-    return_value = return_value / self.songs.length
-    return_value
+  def get_data
+    #return a hash including the name and relevant data
+    return_hash = {name: self.name, length: self.songs.length, data: self.get_averages}
   end
 
   def distribution_by_feature(feature)
     #ideally for pie charts, returns a count
+    #postitive: songs whose :feature is >= .6
+    #negative: songs whose :feature is <= .4
+    #neutral: songs whose :feature is between .4 and .6
     return_hash = {positive: 0, negative: 0, neutral: 0}
     self.songs.each do |song|
       if feature_is_sufficient?(feature, true)
@@ -188,64 +171,41 @@ class Playlist < ActiveRecord::Base
     return_hash
   end
 
-  def analyze_for_tags
-    #compares the averages against deviation, returns tags which may describe playlist
-    #weighs outliers appropriately -- eg: may not assign a "happy" tag to a playlist with nine ABBA songs and one Cradle of Filth
-    #currently ignores averages with deviations above 5%
-    tags = []
-    tag_it(tags, :danceability, true, "dancing")
-    tag_it(tags, :valence, true, "happy")
-    tag_it(tags, :valence, false, "melancholy")
-    tag_it(tags, :energy, true, "energetic")
-    tag_it(tags, :energy, false, "chill")
-    tag_it(tags, :instrumentalness, true, "instrumental")
-    tag_it(tags, :speechiness, true, "lyrical")
-    tag_it(tags, :acousticness, true, "unplugged")
-    tag_it(tags, :liveness, true, "live")
-    tags
-  end
-
-  def tag_it(array, feature, more, tag)
-    #helper method for #analyze_for_tags
-    if (feature_is_sufficient?(feature, more) && self.get_deviation(feature) <= 0.05)
-      array << tag
-    end
-  end
-
-  def feature_is_sufficient?(feature, more)
-    # Determines if the average of a feature is sufficient to be considered of that tag
-
-    evaluator = (more ? ">= 0.6" : "<= 0.4")
-    if (feature == :tempo)
-      evaluator = (more ? ">=125" : "<=115")
-    end
-
-    return eval("#{self.average(feature)} #{evaluator}")
-  end
-
-  def optimize(feature, percent, more)
+  def optimize(feature, percent = 0.25, increment)
     #improve the playlist based on the feature
-    #should earn the playlist the appropriate tag
-    #if the playlist already has the tag, it should raise the average and lower inconsistencies
-    #"more" describes a boolean, evaluating whether the value is increasing or decreasing
-    # will give up if half or more of the playlist has been replaced
 
-    evaluator = (more ? ">" : "<")
-    remove_value = (more ? "first" : "last")
+    #Arguments:
+    #feature -- The column name, passed as a symbol or string (Prefferably symbol)
+    #percent -- The max percent of the playlist willing to replace (float, less than zero)
+    #increment -- Whether one would like to make the playlist "more"(true) feature or "less"(false)
+
+    #Steps:
+    #1. establish "evaluator" and "remove_value" based on whether the function is increasing or decreasing and average value
+    #2. begin a loop
+    #3. determine the worst song by feature and remove it
+    #4. construct an SQL query amounting to something like "WHERE feature < 0.4546"
+    #5. find all songs meeting the query and narrow them down by genres already in the playlist.
+    #6. select a random song from the results and add it
+    #7. continue the loop until the feature is acheived or until the given percentage of songs have been replaced (default 25%)
+
+    # Step 1
+    evaluator = (increment ? ">" : "<")
+    remove_value = (increment ? "first" : "last")
     loop_count = 0
-
+    # Step 2
     loop do
       avg = average(feature)
+      # Step 3
       del_song = self.songs.order(feature).send(remove_value)
       puts ("Removing #{del_song.title}: #{del_song.send("#{feature}")}")
       delete_song(del_song)
       puts ("Removed")
-
+      # Step 4
       query = "#{feature} #{evaluator} #{avg}"
 
-      #Daisiest Chain: Selects a random song that fits the feature specs and falls within a relevant genre
+      # Step 5 Daisiest Chain: Selects a random song that fits the feature specs and falls within a relevant genre
       find = Song.where(query).select { |song| self.genres.include?(song.genre) }.sample(1).first
-
+      # Step 6
       puts ("Adding #{find.title}: #{find.send("#{feature}")}")
       add_song(find)
       puts ("Added")
@@ -253,13 +213,22 @@ class Playlist < ActiveRecord::Base
       loop_count += 1
 
       puts ("Total #{loop_count}")
-
-      break if (feature_is_sufficient?(feature, more) || loop_count >= songs.length * percent)
+      # Step 7
+      break if (feature_is_sufficient?(feature, increment) || loop_count >= songs.length * percent)
     end
   end
 
-  def needs_more_cowbell
-    return !self.songs.includes(Song.find(name: "Don't Fear The Reaper"))
+  def feature_is_sufficient?(feature, increment)
+    # Determines if the average of a feature is sufficient to be considered of that tag
+    # argument "increment" is boolean, true determines if the value is sufficiently high, false sufficiently low
+    #
+
+    evaluator = (increment ? ">= 0.6" : "<= 0.4")
+    if (feature == :tempo)
+      evaluator = (increment ? ">=125" : "<=115")
+    end
+
+    return eval("#{self.average(feature)} #{evaluator}")
   end
 
   # ######### change index to playlist_index
@@ -300,5 +269,78 @@ class Playlist < ActiveRecord::Base
       song.save
     end
     self
+  end
+
+  ### HERE BEGINS METHOD PURGATORY ###
+
+  def analyze_for_tags
+    #compares the averages against deviation, returns tags which may describe playlist
+    #weighs outliers appropriately -- eg: may not assign a "happy" tag to a playlist with nine ABBA songs and one Cradle of Filth
+    #currently ignores averages with deviations above 5%
+    #not in use -- but may be valuable
+    tags = []
+    tag_it(tags, :danceability, true, "dancing")
+    tag_it(tags, :valence, true, "happy")
+    tag_it(tags, :valence, false, "melancholy")
+    tag_it(tags, :energy, true, "energetic")
+    tag_it(tags, :energy, false, "chill")
+    tag_it(tags, :instrumentalness, true, "instrumental")
+    tag_it(tags, :speechiness, true, "lyrical")
+    tag_it(tags, :acousticness, true, "unplugged")
+    tag_it(tags, :liveness, true, "live")
+    tags
+  end
+
+  def get_deviation(feature)
+    #compares each value against the average, returns the average deviation
+    #determines varience via squaring the difference, giving weight to extreme differences
+    #the lower the value, the more consistent the quality
+    #This is not in use (yet), but hold on in case we need it
+    avg = self.average(feature)
+    return_value = self.songs.inject(0) do |sum, song|
+      sum + (avg - song.send("#{feature}")).abs2
+    end
+    return_value = return_value / self.songs.length
+    return_value
+  end
+
+  def tag_it(array, feature, more, tag)
+    #helper method for #analyze_for_tags
+    #not in use -- may be needed
+    if (feature_is_sufficient?(feature, more) && self.get_deviation(feature) <= 0.05)
+      array << tag
+    end
+  end
+
+  def needs_more_cowbell
+    #Untested. Possibly Dangerous
+    return !self.songs.includes(Song.find(name: "Don't Fear The Reaper"))
+  end
+
+  def display
+    #Lists the songs
+    #May yield to provide more details
+    #Mostly used for testing
+    self.songs.each do |song|
+      puts "#{song.id}. #{song.title}"
+    end
+    nil
+  end
+
+  def display_with_details
+    #puts the song details
+    #mostly used for testing
+    self.songs.each do |song|
+      song.display(false)
+    end
+    nil
+  end
+
+  def display_feature(feature)
+    #puts the quality in a list "SongName: feature"
+    #mostly used for testing
+    self.songs.map do |song|
+      puts "#{song.title}: #{song.send("#{feature}")}"
+    end
   end
 end

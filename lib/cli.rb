@@ -1,7 +1,10 @@
+#This fixes some of the logger issues -- if you're still having them, enter this in console
+ActiveRecord::Base.logger.level= 1
+
 class CLI
   attr_accessor :username
   #box = TTY::Box.frame(width: 30, height:10, title: {top_left: "TITLE"})
-
+  
   def run
     exit_flag = false
 
