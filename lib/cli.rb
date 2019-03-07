@@ -1,17 +1,10 @@
 #This fixes some of the logger issues -- if you're still having them, enter this in console
-<<<<<<< HEAD
 # ActiveRecord::Base.logger.level= 1
-
-class CLI
-  attr_accessor :username
-
-=======
 
 class CLI
   attr_accessor :username
   #box = TTY::Box.frame(width: 30, height:10, title: {top_lef`t: "TITLE"})
 
->>>>>>> 6ba9eee6dfd82a21adc543ffa931c2c42491e8a0
   def run
     exit_flag = false
 
