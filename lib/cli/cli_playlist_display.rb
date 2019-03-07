@@ -13,9 +13,21 @@ class CliPlaylistDisplay include CliStringFormatting
     song_array = []
 
     self.playlist.order_playlist.each do | song |
-      song_array << "#{song.title} - #{song.artist}"
+      #song_array << "#{song.title} - #{song.artist}"
+      song_array << "#{song.short_title} - #{song.artist}"
     end
     song_array
+  end
+
+  def get_song_on_current_page(song_number)
+    # song_number += page_number * 20
+    i = 1
+    self.playlist.order_playlist.each do | song |
+      if i == song_number
+        return song
+      end
+      i += 1
+    end
   end
 
   def create_pages

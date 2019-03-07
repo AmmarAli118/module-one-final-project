@@ -18,6 +18,7 @@ class CliMenu include CliStringFormatting
     self.header = ""
     self.text = ""
     self.footer = ""
+    self.display_size = "versatile"
   end
 
   def get_user_input
