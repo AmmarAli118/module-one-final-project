@@ -32,7 +32,7 @@ class Playlist < ActiveRecord::Base
       elsif (attribute == "live")
         feature_query << "liveness >= 0.6"
       elsif (attribute == "lyrical")
-        feature_query << "speechiness >= 0.6"
+        feature_query << "instrumentalness <= 0.4"
       elsif (attribute == "fast")
         feature_query << "tempo >= 125.0"
       elsif (attribute == "slow")
@@ -54,7 +54,7 @@ class Playlist < ActiveRecord::Base
       elsif (attribute == "classical")
         genre_query << "genre = 'classical'"
       else
-        puts "Attribute Not Found"
+        puts "Attribute Not Found: #{attribute}"
       end
     end
     # puts ("feature_query: #{feature_query}")
@@ -67,7 +67,7 @@ class Playlist < ActiveRecord::Base
     if (feature_query.length > 0 || genre_query.length > 0)
       query_string = self.build_query(feature_query, genre_query)
     else
-      query_string = "title IS NOT 'Don't Fear the Reaper'"
+      query_string = "title IS NOT 'Don't Fear the Reaper'" #TODO REFACTOR TO TOP
     end
     #puts ("QUERY_STRING: #{query_string}")
     #Step 3
@@ -80,7 +80,7 @@ class Playlist < ActiveRecord::Base
         broadened_query = feature_query.map do |query|
           query = query.sub("4", "5").sub("6", "5")
         end
-
+        #TODO -- TRY anohter search before combinations
         query_size -= 1
         new_queries = broadened_query.combination(query_size).to_a
         new_queries.each do |query|
@@ -190,7 +190,7 @@ class Playlist < ActiveRecord::Base
     return_hash
   end
 
-  def optimize(feature, percent = 0.25, increment)
+  def optimize(feature, increment, percent = 0.25)
     #improve the playlist based on the feature
 
     #Arguments:
@@ -200,53 +200,61 @@ class Playlist < ActiveRecord::Base
 
     #Steps:
     #1. establish "evaluator" and "remove_value" based on whether the function is increasing or decreasing and average value
-    #2. begin a loop
-    #3. determine the worst song by feature and remove it
-    #4. construct an SQL query amounting to something like "WHERE feature < 0.4546"
-    #5. find all songs meeting the query and narrow them down by genres already in the playlist.
-    #6. select a random song from the results and add it
-    #7. continue the loop until the feature is acheived or until the given percentage of songs have been replaced (default 25%)
+    #2. begin a loop. The loop breaks when the average has been sufficiently raised or when too many songs have been replaced
+    #3. run #get_better_songs, which will return an array of songs which would improve the playlist
+    #4. Add a random song from the #get_better_songs array, and remove the words
+    #    ---> If the #get_better_songs return value is [], the playlist cannot be further optimized.
+    #5. Save the playlist and return a success string
 
     # Step 1
     evaluator = (increment ? ">" : "<")
     remove_value = (increment ? "first" : "last")
     loop_count = 0
+
     # Step 2
     loop do
-      avg = average(feature)
-      # Step 3
-      del_song = self.songs.order(feature).send(remove_value)
-      puts ("Removing #{del_song.title}: #{del_song.send("#{feature}")}")
-      delete_song(del_song)
-      puts ("Removed")
-      # Step 4
-      query = "#{feature} #{evaluator} #{avg}"
-
-      # Step 5 Daisiest Chain: Selects a random song that fits the feature specs and falls within a relevant genre
-      find = Song.where(query).select { |song| self.genres.include?(song.genre) }.sample(1).first
-      # Step 6
-      puts ("Adding #{find.title}: #{find.send("#{feature}")}")
-      add_song(find)
-      puts ("Added")
-
       loop_count += 1
-
-      puts ("Total #{loop_count}")
-      # Step 7
       break if (feature_is_sufficient?(feature, increment) || loop_count >= songs.length * percent)
+
+      # Step 3
+      find = get_better_songs(feature, evaluator)
+      #Step 4
+      if (find.length > 0)
+        song_to_add = find.sample(1).first
+        add_song(song_to_add)
+        #Looks like remove (self.songs.in_order_by_danceability.first) or remove (self.songs.in_order_by_energy.last)
+        del_song = self.songs.order(feature).send(remove_value)
+        delete_song(del_song)
+      else
+        self.save
+        return "Playlist is already optimized"
+      end
     end
+    #Step 5
+    self.save
+    return "Playlist has been optimized. #{loop_count} songs have been replaced."
+  end
+
+  def get_better_songs(feature, evaluator)
+    #helper method for optimize
+    #Returns an array of songs that would raise the average
+    #Will not add songs already in the playlist or outside defined genres
+    #may return an empty array-indicating the playlist cannot be optimized further
+    avg = average(feature)
+    query = "#{feature} #{evaluator} #{avg}"
+    find = Song.where(query)
+    find = find.select { |song| self.genres.include?(song.genre) && !self.songs.include?(song) }
+    find
   end
 
   def feature_is_sufficient?(feature, increment)
     # Determines if the average of a feature is sufficient to be considered of that tag
     # argument "increment" is boolean, true determines if the value is sufficiently high, false sufficiently low
-    #
 
     evaluator = (increment ? ">= 0.6" : "<= 0.4")
     if (feature == :tempo)
       evaluator = (increment ? ">=125" : "<=115")
     end
-
     return eval("#{self.average(feature)} #{evaluator}")
   end
 
@@ -300,12 +308,12 @@ class Playlist < ActiveRecord::Base
       changed_song = self.playlist_songs.find_by(playlist_index: old_index)
       if old_index > new_index
         # gets an array of songs affected by the shift
-        songs_to_shift = self.ordered_playlist_songs[(new_index-1)..(old_index-1)]
-        songs_to_shift.each {|song| song.down_index}
+        songs_to_shift = self.ordered_playlist_songs[(new_index - 1)..(old_index - 1)]
+        songs_to_shift.each { |song| song.down_index }
       elsif old_index < new_index
         # gets an array of songs affected by the shift
-        songs_to_shift = self.ordered_playlist_songs[(old_index-1)..(new_index-2)]
-        songs_to_shift.each {|song| song.up_index}
+        songs_to_shift = self.ordered_playlist_songs[(old_index - 1)..(new_index - 2)]
+        songs_to_shift.each { |song| song.up_index }
       end
       # update song's playlist_index
       changed_song.playlist_index = new_index
@@ -313,8 +321,6 @@ class Playlist < ActiveRecord::Base
     end
     return self
   end
-
-
 
   ### HERE BEGINS METHOD PURGATORY ###
 
