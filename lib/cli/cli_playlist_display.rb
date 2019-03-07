@@ -5,7 +5,7 @@ class CliPlaylistDisplay include CliStringFormatting
     @playlist, @page_number = playlist, page_number
     @header = ""
     @text = ""
-    @footer = "\n\na)Add Song  b) Remove Song c) Optimize Playlist d) Data e) Reorder f) Previos Page g) Next Page h)Exit\n"
+    @footer = "\n\na) Add Song  b) Remove Song c) Optimize Playlist d) Data e) Reorder f) Previos Page g) Next Page h) Exit\n"
     @pages = []
   end
 

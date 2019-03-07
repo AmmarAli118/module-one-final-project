@@ -194,7 +194,7 @@ class CLI include CliStringFormatting
   end
 
   def add_song_to_playlist(playlist)
-    playlist_add_song_menu.header = "#{playlist.name}\n" + playlist_add_song_menu.header
+    playlist_add_song_menu.header = "#{playlist.name}\nEnter name of song you want to add:\n"
     playlist_add_song_menu.display
     input = playlist_add_song_menu.get_user_input
 
