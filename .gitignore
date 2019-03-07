@@ -11,4 +11,5 @@ tmp
 *.swp
 
 db/*.db
+db/backup/*.db
 api_keys.rb

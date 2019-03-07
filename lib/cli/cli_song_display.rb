@@ -9,7 +9,7 @@ class CliSongDisplay include CliStringFormatting
   end
 
   def display_new_song
-    self.header = "Song: #{song.title}\t\tArtist: #{song.artist}\t\tAlbum: #{song.album}\n"
+    self.header = "Song: #{song.title.truncate(35)}\t\tArtist: #{song.artist}\t\tAlbum: #{song.album.truncate(30)}\n"
     self.header += "Genre: #{song.genre.upcase}\t\tKey: #{key_letter(song.key)} #{song_key(song.mode)}\n\n"
     song_data = {"acousticness" => song.acousticness, "danceability" => song.danceability,
        "energy" => song.energy, "instrumentalness" => song.instrumentalness, "liveness" => song.liveness,
