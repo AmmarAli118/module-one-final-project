@@ -27,13 +27,12 @@ describe Playlist do
     end
   end
 
-  before do
-    test_playlist1 = Playlist.generate("test 1", ["happy"], 20)
-    test_playlist2 = Playlist.generate("test 2", ["country", "melancholy", "chill"], 30)
-    test_playlist3 = Playlist.generate("test 3", ["jazz", "country", "slow", "acoustic"], 25)
-  end
 
   describe ".generate_playlist" do
+    let(:test_playlist1)  {Playlist.generate("test 1", ["happy"], 20)}
+    let(:test_playlist2) {Playlist.generate("test 2", ["country", "melancholy", "chill"], 30)}
+    let(:test_playlist3) {Playlist.generate("test 3", ["jazz", "country", "slow", "acoustic"], 25)}
+
     it "generates a playlist of correct length" do
       expect(test_playlist1.songs.length).to eq(20)
       expect(test_playlist2.songs.length).to eq(30)

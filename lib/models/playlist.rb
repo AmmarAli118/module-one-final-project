@@ -87,7 +87,6 @@ class Playlist < ActiveRecord::Base
     # -----------------------------
     # END REFACTOR
     # -----------------------------
-    query.uniq!
     search = []
     #Step 2
     query_string = ""
