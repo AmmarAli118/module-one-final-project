@@ -19,6 +19,8 @@ describe Playlist do
     end
   end
 
+
+
   describe ".build_query" do
     it "outputs a string to be used in a query" do
       feature_query = ["tempo >= 125.0", "valence >= 0.6", "energy <= 0.4"]

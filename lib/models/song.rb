@@ -17,6 +17,6 @@ class Song < ActiveRecord::Base
 
   # short_title
   def short_title
-    song.title.truncate(30)
+    self.title.truncate(30)
   end
 end
