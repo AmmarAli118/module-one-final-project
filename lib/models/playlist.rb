@@ -65,7 +65,7 @@ class Playlist < ActiveRecord::Base
     #   "slow" => "tempo <= 115.0",
     #   "happy" => "valence >= 0.6",
     #   "melancholy" => "valence <= 0.4"}
-    
+
     # genres = {"rock" => "genre = 'rock'",
     #   "jazz" => "genre = 'jazz'",
     #   "pop" => "genre = 'pop'",
@@ -144,7 +144,6 @@ class Playlist < ActiveRecord::Base
     else
       return_string = query_string
     end
-    binding.pry
     return_string
   end
 
