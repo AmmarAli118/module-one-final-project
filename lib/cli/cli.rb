@@ -31,7 +31,7 @@ class CLI include CliStringFormatting
     self.playlist_delete_menu = CliMenu.new("Enter Number To Delete:", "", "--------------\n")
 
     self.playlist_find_menu = CliMenu.new("Find Playlist\nEnter name of playlist:", "", "", "large")
-    self.playlist_search_menu = CliMenu.new("Enter number of the playlist you want to view:", "", "")
+    self.playlist_search_menu = CliMenu.new("Enter number of the playlist you want to view:", "", "", "large")
 
     self.playlist_create_menu = CliMenu.new("Create Playlist\nEnter name for playlist:", "", "", "large")
 
@@ -206,7 +206,7 @@ class CLI include CliStringFormatting
   end
 
   def remove_song_from_playlist
-    playlist_remove_song_menu.header = "#{playlist_display.playlist.name} Enter name of song you want to remove: \n"
+    playlist_remove_song_menu.header = "#{playlist_display.playlist.name}\n"
     text_string = columnize_song_name_array(playlist_display.get_song_names)
 
     playlist_remove_song_menu.text = text_string
@@ -233,7 +233,8 @@ class CLI include CliStringFormatting
   def optimize_playlist
     plain_menu.clear
     plain_menu.header = "Optimize Playlist: #{playlist_display.playlist.name}"
-    plain_menu.text = "Enter a feature to optimize: \n-acousticness -danceability -energy\n-instrumentalness -liveness -speechiness\n-valence   -tempo\n"
+    plain_menu.text = "Enter a feature to optimize: \n-acousticness -danceability -energy\n-instrumentalness -liveness \n-valence   -tempo\n"
+    plain_menu.display_size = "large"
     plain_menu.display
     input = plain_menu.get_user_input
     feature = input
@@ -261,7 +262,7 @@ class CLI include CliStringFormatting
       return 0
     end
 
-    playlist_display.playlist.optimize(feature, (input.to_f / 100), increment)
+    playlist_display.playlist.optimize(feature, increment, (input.to_f / 100))
   end
 
   def display_data(playlist)
@@ -287,6 +288,7 @@ class CLI include CliStringFormatting
           playlist_display.create_pages
         when "c", "optimize playlist"
           optimize_playlist
+          playlist_display.create_pages
         when "d", "data"
           display_data(playlist)
         when "e", "reorder"
@@ -303,6 +305,11 @@ class CLI include CliStringFormatting
         when "h", "exit"
           exit_flag = true
           #return 0
+      end
+      range_start = (playlist_display.page_number * 20) + 1
+      range_end = range_start + 20
+      if (range_start..range_end).include?(input.to_i)
+        display_song(playlist_display.get_song_on_current_page(input.to_i))
       end
     end
   end
