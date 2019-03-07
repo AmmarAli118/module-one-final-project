@@ -16,7 +16,6 @@ class Playlist < ActiveRecord::Base
     # 4. Using Array#combination, expand query until search results match or surpass input_length
     # 5. Create the Playlist instance, add its songs directly, save, and return it
 
-    list = []
     feature_query = []
     genre_query = []
     # Step 1
@@ -61,6 +60,33 @@ class Playlist < ActiveRecord::Base
     # puts ("genre_query: #{genre_query}")
     feature_query.uniq!
     genre_query.uniq!
+    # ----------------------------
+    # BEGIN REFACTOR
+    # ----------------------------
+    # features = {"acoustic" => "acousticness >= 0.6",
+    #   "dancing" => "danceability >= 0.6",
+    #   "energetic" => "energy >= 0.6",
+    #   "chill" => "energy <= 0.4",
+    #   "live" => "liveness >= 0.6",
+    #   "lyrical" => "speechiness >= 0.6",
+    #   "fast" => "tempo >= 125.0",
+    #   "slow" => "tempo <= 115.0",
+    #   "happy" => "valence >= 0.6",
+    #   "melancholy" => "valence <= 0.4"}
+
+    # genres = {"rock" => "genre = 'rock'",
+    #   "jazz" => "genre = 'jazz'",
+    #   "pop" => "genre = 'pop'",
+    #   "country" => "genre = 'country'",
+    #   "classical" => "genre = 'classical'"}
+    #
+    # attributes.each do |attribute|
+    #   string += features[attribute] if features[attribute]
+    # end
+
+    # -----------------------------
+    # END REFACTOR
+    # -----------------------------
     search = []
     #Step 2
     query_string = ""
@@ -102,6 +128,7 @@ class Playlist < ActiveRecord::Base
     else
       search = search.sample(input_length)
       #Step 5
+      # this code is fine
       playlist = Playlist.create
       search.each do |song|
         playlist.add_song(song)
@@ -250,8 +277,6 @@ class Playlist < ActiveRecord::Base
     return eval("#{self.average(feature)} #{evaluator}")
   end
 
-  # ######### change index to playlist_index
-
   # add_song
   def add_song(song)
     # adds song to playlist and creates index based on number of
@@ -312,83 +337,5 @@ class Playlist < ActiveRecord::Base
       changed_song.save
     end
     return self
-  end
-
-
-
-  ### HERE BEGINS METHOD PURGATORY ###
-
-  def analyze_for_tags
-    #compares the averages against deviation, returns tags which may describe playlist
-    #weighs outliers appropriately -- eg: may not assign a "happy" tag to a playlist with nine ABBA songs and one Cradle of Filth
-    #currently ignores averages with deviations above 5%
-    #not in use -- but may be valuable
-    tags = []
-    tag_it(tags, :danceability, true, "dancing")
-    tag_it(tags, :valence, true, "happy")
-    tag_it(tags, :valence, false, "melancholy")
-    tag_it(tags, :energy, true, "energetic")
-    tag_it(tags, :energy, false, "chill")
-    tag_it(tags, :instrumentalness, true, "instrumental")
-    tag_it(tags, :speechiness, true, "lyrical")
-    tag_it(tags, :acousticness, true, "unplugged")
-    tag_it(tags, :liveness, true, "live")
-    tags
-  end
-
-  def get_deviation(feature)
-    #compares each value against the average, returns the average deviation
-    #determines varience via squaring the difference, giving weight to extreme differences
-    #the lower the value, the more consistent the quality
-    #This is not in use (yet), but hold on in case we need it
-    avg = self.average(feature)
-    return_value = self.songs.inject(0) do |sum, song|
-      sum + (avg - song.send("#{feature}")).abs2
-    end
-    return_value = return_value / self.songs.length
-    return_value
-  end
-
-  def tag_it(array, feature, more, tag)
-    #helper method for #analyze_for_tags
-    #not in use -- may be needed
-    if (feature_is_sufficient?(feature, more) && self.get_deviation(feature) <= 0.05)
-      array << tag
-    end
-  end
-
-  def needs_more_cowbell
-    #Untested. Possibly Dangerous
-    return !self.songs.includes(Song.find(name: "Don't Fear The Reaper"))
-  end
-
-  def display
-    #Lists the songs
-    #May yield to provide more details
-    #Mostly used for testing
-    self.songs.each do |song|
-      puts "#{song.id}. #{song.title}"
-    end
-    nil
-  end
-
-  def display_with_details
-    #puts the song details
-    #mostly used for testing
-    self.songs.each do |song|
-      song.display(false)
-    end
-    nil
-  end
-
-  def display_feature(feature)
-    #puts the quality in a list "SongName: feature"
-    #mostly used for testing
-    sorted = self.songs.sort do |l, h|
-      l.send("#{feature}") <=> h.send("#{feature}")
-    end
-    sorted.map do |song|
-      puts "#{song.title}: #{song.send("#{feature}")}"
-    end
   end
 end
