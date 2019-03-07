@@ -2,9 +2,15 @@ class Song < ActiveRecord::Base
   has_many :playlist_songs
   has_many :playlists, through: :playlist_songs
 
-  def top_songs_by_feature(feature)
+  def self.top_songs_by_feature(feature, increment)
     #returns top ten by feature
-    Song.all.order(feature, :desc)[0..9]
+    list = []
+    if (increment)
+      list = self.order(feature)
+    else
+      list = self.order("#{feature} DESC")
+    end
+    list
   end
 
   def add_to_playlist(playlist)

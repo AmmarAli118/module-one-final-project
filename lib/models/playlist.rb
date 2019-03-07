@@ -17,61 +17,80 @@ class Playlist < ActiveRecord::Base
     # 5. Create the Playlist instance, add its songs directly, save, and return it
 
     list = []
-    query = []
+    feature_query = []
+    genre_query = []
     # Step 1
     attributes.each do |attribute|
       if (attribute == "acoustic")
-        query << "acousticness >= 0.6"
+        feature_query << "acousticness >= 0.6"
       elsif (attribute == "dancing")
-        query << "danceability >= 0.6"
+        feature_query << "danceability >= 0.6"
       elsif (attribute == "energetic")
-        query << "energy >= 0.6"
+        feature_query << "energy >= 0.6"
       elsif (attribute == "chill")
-        query << "energy <= 0.4"
+        feature_query << "energy <= 0.4"
       elsif (attribute == "live")
-        query << "liveness >= 0.6"
+        feature_query << "liveness >= 0.6"
       elsif (attribute == "lyrical")
-        query << "speechiness >= 0.6"
+        feature_query << "speechiness >= 0.6"
       elsif (attribute == "fast")
-        query << "tempo >= 125.0"
+        feature_query << "tempo >= 125.0"
       elsif (attribute == "slow")
-        query << "tempo <= 115.0"
+        feature_query << "tempo <= 115.0"
       elsif (attribute == "happy")
-        query << "valence >= 0.6"
+        feature_query << "valence >= 0.6"
       elsif (attribute == "melancholy")
-        query << "valence <= 0.4"
+        feature_query << "valence <= 0.4"
       elsif (attribute == "rock")
-        query << "genre = 'rock'"
+        genre_query << "genre = 'rock'"
       elsif (attribute == "jazz")
-        query << "genre = 'jazz'"
+        genre_query << "genre = 'jazz'"
       elsif (attribute == "pop")
-        query << "genre = 'pop'"
+        genre_query << "genre = 'pop'"
+      elsif (attribute == "rap")
+        genre_query << "genre = 'rap'"
       elsif (attribute == "country")
-        query << "genre = 'country'"
+        genre_query << "genre = 'country'"
       elsif (attribute == "classical")
-        query << "genre = 'classical'"
+        genre_query << "genre = 'classical'"
       else
         puts "Attribute Not Found"
       end
     end
-
-    query.uniq!
+    # puts ("feature_query: #{feature_query}")
+    # puts ("genre_query: #{genre_query}")
+    feature_query.uniq!
+    genre_query.uniq!
     search = []
     #Step 2
-    query_string = self.build_query(query)
+    query_string = ""
+    if (feature_query.length > 0 || genre_query.length > 0)
+      query_string = self.build_query(feature_query, genre_query)
+    else
+      query_string = "title IS NOT 'Don't Fear the Reaper'"
+    end
+    #puts ("QUERY_STRING: #{query_string}")
     #Step 3
     search.concat(Song.where(query_string))
     search.uniq!
-    query_size = query.length
+    query_size = feature_query.length
     while (query_size > 0)
       if (search.length < input_length)
         #Step 4
+        broadened_query = feature_query.map do |query|
+          query = query.sub("4", "5").sub("6", "5")
+        end
+
         query_size -= 1
-        new_queries = query.combination(query_size).to_a
+        new_queries = broadened_query.combination(query_size).to_a
         new_queries.each do |query|
-          query_string = self.build_query(query)
+          query_string = self.build_query(query, genre_query)
           search.concat(Song.where(query_string))
           search.uniq!
+          if search.length >= input_length
+            search = search[0...input_length]
+            break
+          end
         end
       else
         break
@@ -93,38 +112,38 @@ class Playlist < ActiveRecord::Base
     end
   end
 
-  def self.build_query(query)
+  def self.build_query(feature_query, genre_query)
     #helper method for generate
     #final form: "attr > .5 AND attr2 <= .4 AND (genre = genre1 OR genre = genre2)
     query_string = ""
     genre_string = ""
 
-    query.each do |q|
-      if q[0] == "g"
-        #Each song in the db has exactly one genre, so the query should search for these with OR
-        if (genre_string.length > 0)
-          genre_string += " OR "
-        end
-        genre_string += q
-      else
-        #Non-genre specifications should require AND
-        if (query_string.length > 0)
-          query_string += " AND "
-        end
-        query_string += q
+    feature_query.each do |q|
+      #Non-genre specifications should require AND
+      if (query_string.length > 0)
+        query_string += " AND "
       end
+      query_string += q
     end
-    if (genre_string != "")
+    genre_query.each do |g|
+      if (genre_string.length > 0)
+        genre_string += " OR "
+      end
+      genre_string += g
+    end
+    #Return combined string
+    if (genre_query.length > 0 && feature_query.length > 0)
       return_string = "#{query_string} AND (#{genre_string})"
     else
-      return_string = query_string
+      #If one of the strings is empty, return the full one
+      return_string = (feature_query.length == 0 ? genre_string : query_string)
     end
     return_string
   end
 
   def genres
     #returns all unique genres as an array of strings
-    return songs.map { |song| song.genre }.uniq!
+    return self.songs.map { |song| song.genre }.uniq!
   end
 
   def average(feature)
@@ -175,7 +194,7 @@ class Playlist < ActiveRecord::Base
     #improve the playlist based on the feature
 
     #Arguments:
-    #feature -- The column name, passed as a symbol or string (Prefferably symbol)
+    #feature -- The column name, passed as a symbol or string (string or symbol)
     #percent -- The max percent of the playlist willing to replace (float, less than zero)
     #increment -- Whether one would like to make the playlist "more"(true) feature or "less"(false)
 
@@ -339,7 +358,10 @@ class Playlist < ActiveRecord::Base
   def display_feature(feature)
     #puts the quality in a list "SongName: feature"
     #mostly used for testing
-    self.songs.map do |song|
+    sorted = self.songs.sort do |l, h|
+      l.send("#{feature}") <=> h.send("#{feature}")
+    end
+    sorted.map do |song|
       puts "#{song.title}: #{song.send("#{feature}")}"
     end
   end
