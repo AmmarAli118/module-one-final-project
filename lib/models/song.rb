@@ -2,11 +2,7 @@ class Song < ActiveRecord::Base
   has_many :playlist_songs
   has_many :playlists, through: :playlist_songs
 
-<<<<<<< HEAD
   def self.top_songs_by_feature(feature, increment)
-=======
-  def self.top_songs_by_feature(feature)
->>>>>>> 59b7b105c8d729cc4b8481818d6d43cacddfc54b
     #returns top ten by feature
     list = []
     if (increment)
