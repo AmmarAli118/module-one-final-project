@@ -184,15 +184,9 @@ end
   display_playlist(new_playlist)
 end
   def add_song_to_playlist(playlist)
-<<<<<<< HEAD
-  playlist_add_song_menu.header = "#{playlist.name}\n" + playlist_add_song_menu.header
+  playlist_add_song_menu.header = "#{playlist.name}\nEnter name of song you want to add:\n"
   playlist_add_song_menu.display
   input = playlist_add_song_menu.get_user_input
-=======
-    playlist_add_song_menu.header = "#{playlist.name}\nEnter name of song you want to add:\n"
-    playlist_add_song_menu.display
-    input = playlist_add_song_menu.get_user_input
->>>>>>> e60dab1ba2c92673c6e8e7650d88358b0b860ba7
 
   new_song = song_search(input)
   if new_song != 0
