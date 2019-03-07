@@ -331,6 +331,13 @@ class Playlist < ActiveRecord::Base
     playlist_index <= self.playlist_songs.length && playlist_index > 0
   end
 
+  def ordered_playlist_songs
+    self.playlist_songs.order(:playlist_index)
+  end
+
+  def renumber
+  end
+
   def change_index(old_index, new_index)
     if valid_index?(old_index) && valid_index?(new_index) && old_index != new_index
       # gets the PlaylistSong index of the song to be moved
