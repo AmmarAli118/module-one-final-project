@@ -170,9 +170,8 @@ class Playlist < ActiveRecord::Base
 
   def genres
     #returns all unique genres as an array of strings
-    return_array = ["gospel", "metal", "folk", "blues", "indie"]
-    return_array.concat(self.songs.map { |song| song.genre })
-    return_array.uniq!
+
+    return self.songs.map { |song| song.genre }
   end
 
   def average(feature)
@@ -250,9 +249,11 @@ class Playlist < ActiveRecord::Base
       if (find.length > 0)
         song_to_add = find.sample(1).first
         add_song(song_to_add)
+        puts("Added #{song_to_add.title}")
         #Looks like remove (self.songs.in_order_by_danceability.first) or remove (self.songs.in_order_by_energy.last)
         del_song = self.songs.order(feature).send(remove_value)
         delete_song(del_song)
+        puts("Deleted #{del_song.title}")
       else
         self.save
         puts "Playlist is already optimized"
@@ -262,7 +263,8 @@ class Playlist < ActiveRecord::Base
       break if (feature_is_sufficient?(feature, increment) || loop_count >= songs.length * percent)
     end
     #Step 5
-    # puts "Playlist has been optimized. #{loop_count} songs have been replaced."
+    puts "Playlist has been optimized. #{loop_count} songs have been replaced."
+    self.save
     return self
   end
 
