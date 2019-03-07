@@ -344,7 +344,7 @@ class Playlist < ActiveRecord::Base
         songs_to_shift.each { |song| song.down_index }
       elsif old_index < new_index
         # gets an array of songs affected by the shift
-        songs_to_shift = self.ordered_playlist_songs[(old_index - 1)..(new_index - 2)]
+        songs_to_shift = self.ordered_playlist_songs[(old_index - 1)..(new_index - 1)]
         songs_to_shift.each { |song| song.up_index }
       end
       # update song's playlist_index

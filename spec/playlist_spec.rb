@@ -31,6 +31,31 @@ describe Playlist do
     end
   end
 
+  describe "#change_index" do
+    it "changes the song's index to new index" do
+      p = Playlist.generate("test 1", ["happy"], 10)
+      s1 = p.playlist_songs.find_by(playlist_index: 5)
+      s2 = p.playlist_songs.find_by(playlist_index: 2)
+      p.change_index(5,2)
+      expect(p.playlist_songs.find_by(playlist_index: 2)).to eq(s1)
+    end
+
+    it "successfully moves a song above" do
+      p = Playlist.generate("test 1", ["happy"], 10)
+      s1 = p.playlist_songs.find_by(playlist_index: 5)
+      s2 = p.playlist_songs.find_by(playlist_index: 2)
+      p.change_index(5,2)
+      expect(p.ordered_playlist_songs.map{|song| song.playlist_index}).to eq((1..10).to_a)
+    end
+
+    it "successfully moves a song below" do
+      p = Playlist.generate("test 1", ["happy"], 10)
+      s1 = p.playlist_songs.find_by(playlist_index: 5)
+      # s2 = p.playlist_songs.find_by(playlist_index: 2)
+      p.change_index(2,5)
+      expect(p.ordered_playlist_songs.map{|song| song.playlist_index}).to eq((1..10).to_a)
+    end
+  end
 
   describe ".generate_playlist" do
     let(:test_playlist1)  {Playlist.generate("test 1", ["happy"], 20)}
