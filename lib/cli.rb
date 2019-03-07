@@ -1,18 +1,9 @@
 #This fixes some of the logger issues -- if you're still having them, enter this in console
-<<<<<<< HEAD
-#ActiveRecord::Base.logger.level= 1
 
 class CLI
   attr_accessor :username
   #box = TTY::Box.frame(width: 30, height:10, title: {top_lef`t: "TITLE"})
-  
-=======
-# ActiveRecord::Base.logger.level= 1
 
-class CLI
-  attr_accessor :username
-
->>>>>>> 59b7b105c8d729cc4b8481818d6d43cacddfc54b
   def run
     exit_flag = false
 
@@ -310,7 +301,7 @@ class CLI
     new_song = song_search(input)
     if new_song != 0
       playlist.add_song(new_song)
-    end 
+    end
     display_playlist(playlist)
   end
   #helper method for returning an array of song names
