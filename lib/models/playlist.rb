@@ -64,8 +64,9 @@ class Playlist < ActiveRecord::Base
     #   "fast" => "tempo >= 125.0",
     #   "slow" => "tempo <= 115.0",
     #   "happy" => "valence >= 0.6",
-    #   "melancholy" => "valence <= 0.4",
-    #   "rock" => "genre = 'rock'",
+    #   "melancholy" => "valence <= 0.4"}
+    
+    # genres = {"rock" => "genre = 'rock'",
     #   "jazz" => "genre = 'jazz'",
     #   "pop" => "genre = 'pop'",
     #   "country" => "genre = 'country'",
