@@ -15,7 +15,6 @@ class Playlist < ActiveRecord::Base
     # 3. Search the Database using query
     # 4. Using Array#combination, expand query until search results match or surpass input_length
     # 5. Create the Playlist instance, add its songs directly, save, and return it
-    list = []
     query = []
     # Step 1
     attributes.each do |attribute|
@@ -56,10 +55,24 @@ class Playlist < ActiveRecord::Base
     # ----------------------------
     # BEGIN REFACTOR
     # ----------------------------
-    # {"acoustic"=>"acousticness >= 0.6"}
-
+    # features = {"acoustic" => "acousticness >= 0.6",
+    #   "dancing" => "danceability >= 0.6",
+    #   "energetic" => "energy >= 0.6",
+    #   "chill" => "energy <= 0.4",
+    #   "live" => "liveness >= 0.6",
+    #   "lyrical" => "speechiness >= 0.6",
+    #   "fast" => "tempo >= 125.0",
+    #   "slow" => "tempo <= 115.0",
+    #   "happy" => "valence >= 0.6",
+    #   "melancholy" => "valence <= 0.4",
+    #   "rock" => "genre = 'rock'",
+    #   "jazz" => "genre = 'jazz'",
+    #   "pop" => "genre = 'pop'",
+    #   "country" => "genre = 'country'",
+    #   "classical" => "genre = 'classical'"}
+    #
     # attributes.each do |attribute|
-    #   string += new_hash[attribute] if new_hash[attribute]
+    #   string += features[attribute] if features[attribute]
     # end
 
     # -----------------------------
@@ -93,6 +106,7 @@ class Playlist < ActiveRecord::Base
     else
       search = search.sample(input_length)
       #Step 5
+      # this code is fine
       playlist = Playlist.create
       search.each do |song|
         playlist.add_song(song)
@@ -129,6 +143,7 @@ class Playlist < ActiveRecord::Base
     else
       return_string = query_string
     end
+    binding.pry
     return_string
   end
 
