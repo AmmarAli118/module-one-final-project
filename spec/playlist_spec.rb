@@ -31,36 +31,11 @@ describe Playlist do
     end
   end
 
-  describe "#change_index" do
-    it "changes the song's index to new index" do
-      p = Playlist.generate("test 1", ["happy"], 10)
-      s1 = p.playlist_songs.find_by(playlist_index: 5)
-      s2 = p.playlist_songs.find_by(playlist_index: 2)
-      p.change_index(5,2)
-      expect(p.playlist_songs.find_by(playlist_index: 2)).to eq(s1)
-    end
-
-    it "successfully moves a song above" do
-      p = Playlist.generate("test 1", ["happy"], 10)
-      s1 = p.playlist_songs.find_by(playlist_index: 5)
-      s2 = p.playlist_songs.find_by(playlist_index: 2)
-      p.change_index(5,2)
-      expect(p.ordered_playlist_songs.map{|song| song.playlist_index}).to eq((1..10).to_a)
-    end
-
-    it "successfully moves a song below" do
-      p = Playlist.generate("test 1", ["happy"], 10)
-      s1 = p.playlist_songs.find_by(playlist_index: 5)
-      # s2 = p.playlist_songs.find_by(playlist_index: 2)
-      p.change_index(2,5)
-      expect(p.ordered_playlist_songs.map{|song| song.playlist_index}).to eq((1..10).to_a)
-    end
-  end
-
   describe ".generate_playlist" do
     let(:test_playlist1) { Playlist.generate("test 1", ["happy"], 20) }
     let(:test_playlist2) { Playlist.generate("test 2", ["country", "melancholy", "chill"], 30) }
     let(:test_playlist3) { Playlist.generate("test 3", ["jazz", "country", "slow", "acoustic"], 25) }
+    let(:test_playlist4) { Playlist.generate("test 4", [], 20) }
 
     it "generates a playlist" do
       expect(test_playlist1.class).to be(Playlist)
@@ -70,6 +45,7 @@ describe Playlist do
       expect(test_playlist1.songs.length).to eq(20)
       expect(test_playlist2.songs.length).to eq(30)
       expect(test_playlist3.songs.length).to eq(25)
+      expect(test_playlist4.songs.length).to eq(20)
     end
 
     it "generates a playlist containing only genres specified" do
@@ -97,7 +73,11 @@ describe Playlist do
 
     it "never selects songs of the wrong genre" do
       test_1 = test_playlist_1
+
+      test_1.optimize(:acousticness, false)
+
       expect(test_1.genres).to eq(test_1.optimize(:acousticness, false).genres)
+
       expect(test_playlist_2.genres).to eq(test_playlist_2.optimize(:danceability, false).genres)
       expect(test_playlist_3.genres).to eq(test_playlist_3.optimize(:instrumentalness, false).genres)
       expect(test_playlist_4.genres).to eq(test_playlist_4.optimize(:tempo, false).genres)
