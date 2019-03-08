@@ -1,6 +1,5 @@
 #This fixes some of the logger issues -- if you're still having them, enter this in console
-#ActiveRecord::Base.logger.level = 1
-require "pry"
+# ActiveRecord::Base.logger.level= 1
 
 class CLI include CliStringFormatting
   attr_accessor :username, :main_menu, :playlist_menu, :playlist_generate_menu, :playlist_generate_tag_selection_menu,
