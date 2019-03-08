@@ -36,7 +36,7 @@ describe Playlist do
       p = Playlist.generate("test 1", ["happy"], 10)
       s1 = p.playlist_songs.find_by(playlist_index: 5)
       s2 = p.playlist_songs.find_by(playlist_index: 2)
-      p.change_index(5,2)
+      p.change_index(5, 2)
       expect(p.playlist_songs.find_by(playlist_index: 2)).to eq(s1)
     end
 
@@ -44,16 +44,16 @@ describe Playlist do
       p = Playlist.generate("test 1", ["happy"], 10)
       s1 = p.playlist_songs.find_by(playlist_index: 5)
       s2 = p.playlist_songs.find_by(playlist_index: 2)
-      p.change_index(5,2)
-      expect(p.ordered_playlist_songs.map{|song| song.playlist_index}).to eq((1..10).to_a)
+      p.change_index(5, 2)
+      expect(p.ordered_playlist_songs.map { |song| song.playlist_index }).to eq((1..10).to_a)
     end
 
     it "successfully moves a song below" do
       p = Playlist.generate("test 1", ["happy"], 10)
       s1 = p.playlist_songs.find_by(playlist_index: 5)
       # s2 = p.playlist_songs.find_by(playlist_index: 2)
-      p.change_index(2,5)
-      expect(p.ordered_playlist_songs.map{|song| song.playlist_index}).to eq((1..10).to_a)
+      p.change_index(2, 5)
+      expect(p.ordered_playlist_songs.map { |song| song.playlist_index }).to eq((1..10).to_a)
     end
   end
 
@@ -73,10 +73,8 @@ describe Playlist do
     end
 
     it "generates a playlist containing only genres specified" do
-      expect(test_playlist2.genres.length).to eq(1)
-      expect(test_playlist2.genres).to include("country")
-      expect(test_playlist3.genres.length).to eq(2)
-      expect(test_playlist3.genres).to include("jazz", "country")
+      expect(test_playlist2.genres.uniq.sort).to eq(["country"])
+      expect(test_playlist3.genres.uniq.sort).to eq(["country", "jazz"])
     end
   end
 
@@ -95,11 +93,8 @@ describe Playlist do
       expect(test_playlist_5.average(:acousticness)).to be > (test_playlist_5.optimize(:acousticness, false).average(:acousticness))
     end
 
-    it "never selects songs of the wrong genre" do
-      expect(test_playlist_1.genres).to eq(test_playlist_1.optimize(:acousticness, false).genres)
-      expect(test_playlist_2.genres).to eq(test_playlist_2.optimize(:danceability, false).genres)
+    it "If genre is specified, it never selects songs of the wrong genre" do
       expect(test_playlist_3.genres).to eq(test_playlist_3.optimize(:instrumentalness, false).genres)
-      expect(test_playlist_4.genres).to eq(test_playlist_4.optimize(:tempo, false).genres)
       expect(test_playlist_5.genres).to eq(test_playlist_5.optimize(:valence, true).optimize(:tempo, true).optimize(:valence, false).genres)
     end
 
@@ -109,6 +104,23 @@ describe Playlist do
       expect(test_playlist_3.songs.length).to eq(test_playlist_3.optimize(:danceability, false).songs.length)
       expect(test_playlist_4.songs.length).to eq(test_playlist_4.optimize(:danceability, false).songs.length)
       expect(test_playlist_5.songs.length).to eq(test_playlist_5.optimize(:danceability, false).songs.length)
+    end
+
+    it "doesn't replace more songs than it should" do
+      old_songs = test_playlist_1.songs
+      test_playlist_1.optimize(:valence, false, 0.5)
+      difference = (old_songs - test_playlist_1.songs) | (test_playlist_1.songs - old_songs)
+      expect(difference.length).to be <= 10
+
+      old_songs = test_playlist_2.songs
+      test_playlist_2.optimize(:valence, false, 0.5)
+      difference = (old_songs - test_playlist_2.songs) | (test_playlist_2.songs - old_songs)
+      expect(difference.length).to be <= 15
+
+      old_songs = test_playlist_3.songs
+      test_playlist_3.optimize(:valence, false, 0.2)
+      difference = (old_songs - test_playlist_3.songs) | (test_playlist_3.songs - old_songs)
+      expect(difference.length).to be <= 5
     end
   end
 end
