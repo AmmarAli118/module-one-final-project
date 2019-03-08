@@ -52,6 +52,16 @@ class Playlist < ActiveRecord::Base
         genre_query << "genre = 'country'"
       elsif (attribute == "classical")
         genre_query << "genre = 'classical'"
+      elsif (attribute == "gospel")
+        genre_query << "genre = 'gospel'"
+      elsif (attribute == "punk")
+        genre_query << "genre = 'punk'"
+      elsif (attribute == "metal'")
+        genre_query << "genre = 'metal'"
+      elsif (attribute == "blues")
+        genre_query << "genre = 'blues'"
+      elsif (attribute == "indie")
+        genre_query << "genre = 'indie'"
       else
         puts "Attribute Not Found: #{attribute}"
       end
@@ -171,7 +181,7 @@ class Playlist < ActiveRecord::Base
   def genres
     #returns all unique genres as an array of strings
 
-    return self.songs.map { |song| song.genre }
+    unique_genres = self.songs.map { |song| song.genre }.uniq!.sort
   end
 
   def average(feature)
@@ -249,11 +259,11 @@ class Playlist < ActiveRecord::Base
       if (find.length > 0)
         song_to_add = find.sample(1).first
         add_song(song_to_add)
-        puts("Added #{song_to_add.title}")
+        # puts("Added #{song_to_add.title}")
         #Looks like remove (self.songs.in_order_by_danceability.first) or remove (self.songs.in_order_by_energy.last)
         del_song = self.songs.order(feature).send(remove_value)
         delete_song(del_song)
-        puts("Deleted #{del_song.title}")
+        #  puts("Deleted #{del_song.title}")
       else
         self.save
         puts "Playlist is already optimized"

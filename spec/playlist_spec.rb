@@ -70,7 +70,8 @@ describe Playlist do
     end
 
     it "never selects songs of the wrong genre" do
-      expect(test_playlist_1.genres).to eq(test_playlist_1.optimize(:acousticness, false).genres)
+      test_1 = test_playlist_1
+      expect(test_1.genres).to eq(test_1.optimize(:acousticness, false).genres)
       expect(test_playlist_2.genres).to eq(test_playlist_2.optimize(:danceability, false).genres)
       expect(test_playlist_3.genres).to eq(test_playlist_3.optimize(:instrumentalness, false).genres)
       expect(test_playlist_4.genres).to eq(test_playlist_4.optimize(:tempo, false).genres)
