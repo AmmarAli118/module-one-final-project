@@ -10,9 +10,9 @@ class CliMenuTagSelection < CliMenu
     "happy" => "☐ happy", "melancholy" => "☐ melancholy",
     "energetic" => "☐ energetic", "chill" => "☐ chill", "live" => "☐ live",
     "country" => "☐ country", "rock" => "☐ rock", "pop" => "☐ pop",
-    "classical" => "☐ classical", "rap" => "☐ rap", "jazz" => "☐ jazz"}
-    # "blues" => "☐ blues", "folk" => "☐ folk", "metal" => "☐ metal",
-    # "indie" => "☐ indie", "punk" => "☐ punk", "gospel" => "☐ gospel"
+    "classical" => "☐ classical", "rap" => "☐ rap", "jazz" => "☐ jazz",
+    "blues" => "☐ blues", "folk" => "☐ folk", "metal" => "☐ metal",
+    "indie" => "☐ indie", "punk" => "☐ punk", "gospel" => "☐ gospel"}
   end
 
   def prompt_user_for_tag_selection
