@@ -2,13 +2,15 @@ class Playlist < ActiveRecord::Base
   has_many :playlist_songs
   has_many :songs, through: :playlist_songs
 
+  ALL_GENRES = ["rock", "jazz", "pop", "rap", "country", "classical", "blues", "metal", "gospel", "punk", "indie"]
+  attr_accessor :genres
+
   def self.generate(p_name, attributes, input_length)
     #search through Songs and narrow by each attribute (passed in CLI by tags)
     #Arguments:
     # p_name-Name of Playlist(string),
     # attributes-Array of attributes(strings),
     # input_length--desired length of playlist(integer)
-
     #Steps:
     # 1. Construct an array of SQL query-snippets based on attributes
     # 2. Assemble a query using #build_query
@@ -16,99 +18,85 @@ class Playlist < ActiveRecord::Base
     # 4. Using Array#combination, expand query until search results match or surpass input_length
     # 5. Create the Playlist instance, add its songs directly, save, and return it
 
-    feature_query = []
-    genre_query = []
-    # Step 1
-    attributes.each do |attribute|
-      if (attribute == "acoustic")
-        feature_query << "acousticness >= 0.6"
-      elsif (attribute == "dancing")
-        feature_query << "danceability >= 0.6"
-      elsif (attribute == "energetic")
-        feature_query << "energy >= 0.6"
-      elsif (attribute == "chill")
-        feature_query << "energy <= 0.4"
-      elsif (attribute == "live")
-        feature_query << "liveness >= 0.6"
-      elsif (attribute == "lyrical")
-        feature_query << "instrumentalness <= 0.4"
-      elsif (attribute == "fast")
-        feature_query << "tempo >= 125.0"
-      elsif (attribute == "slow")
-        feature_query << "tempo <= 115.0"
-      elsif (attribute == "happy")
-        feature_query << "valence >= 0.6"
-      elsif (attribute == "melancholy")
-        feature_query << "valence <= 0.4"
-      elsif (attribute == "rock")
-        genre_query << "genre = 'rock'"
-      elsif (attribute == "jazz")
-        genre_query << "genre = 'jazz'"
-      elsif (attribute == "pop")
-        genre_query << "genre = 'pop'"
-      elsif (attribute == "rap")
-        genre_query << "genre = 'rap'"
-      elsif (attribute == "country")
-        genre_query << "genre = 'country'"
-      elsif (attribute == "classical")
-        genre_query << "genre = 'classical'"
+    if (attributes == [])
+      #No attributes returns a randomized playlist
+      return self.random_playlist(p_name, input_length)
+    else
+      assign = self.assign_features_and_genres(attributes)
+      feature_query = assign[0]
+      genre_query = assign[1]
+      specified_genres = assign[2]
+
+      #Step 2
+      search = self.search_songs(feature_query, genre_query, input_length)
+
+      if (search.length <= 0)
+        puts "Couldn't satisfy query"
       else
-        puts "Attribute Not Found: #{attribute}"
+        #Step 5
+        search = search.sample(input_length)
+        playlist = Playlist.create
+        search.each do |song|
+          playlist.add_song(song)
+        end
+        playlist.name = p_name
+        playlist.establish_genres(specified_genres)
+        playlist.save
+        return playlist
       end
     end
-    # puts ("feature_query: #{feature_query}")
-    # puts ("genre_query: #{genre_query}")
+  end
+
+  def self.assign_features_and_genres(attributes)
+    #read through attributes
+    #outputs two query arrays (features and genres) and one array to assign genres to memory
+    feature_query = []
+    genre_query = []
+    specified_genres = []
+    features = {"acoustic" => "acousticness >= 0.6",
+                "dancing" => "danceability >= 0.6",
+                "energetic" => "energy >= 0.6",
+                "chill" => "energy <= 0.4",
+                "live" => "liveness >= 0.6",
+                "lyrical" => "instrumentalness <= 0.4",
+                "fast" => "tempo >= 125.0",
+                "slow" => "tempo <= 115.0",
+                "happy" => "valence >= 0.6",
+                "melancholy" => "valence <= 0.4"}
+    # Step 1
+    attributes.each do |attribute|
+      if features.keys.include?(attribute)
+        feature_query << features[attribute]
+      elsif ALL_GENRES.include?(attribute)
+        genre_query << "genre = '#{attribute}'"
+        specified_genres << attribute
+      end
+    end
     feature_query.uniq!
     genre_query.uniq!
-    # ----------------------------
-    # BEGIN REFACTOR
-    # ----------------------------
-    # features = {"acoustic" => "acousticness >= 0.6",
-    #   "dancing" => "danceability >= 0.6",
-    #   "energetic" => "energy >= 0.6",
-    #   "chill" => "energy <= 0.4",
-    #   "live" => "liveness >= 0.6",
-    #   "lyrical" => "speechiness >= 0.6",
-    #   "fast" => "tempo >= 125.0",
-    #   "slow" => "tempo <= 115.0",
-    #   "happy" => "valence >= 0.6",
-    #   "melancholy" => "valence <= 0.4"}
-
-    # genres = {"rock" => "genre = 'rock'",
-    #   "jazz" => "genre = 'jazz'",
-    #   "pop" => "genre = 'pop'",
-    #   "country" => "genre = 'country'",
-    #   "classical" => "genre = 'classical'"}
-    #
-    # attributes.each do |attribute|
-    #   string += features[attribute] if features[attribute]
-    # end
-
-    # -----------------------------
-    # END REFACTOR
-    # -----------------------------
+    return [feature_query, genre_query, specified_genres]
+  end
+  def self.search_songs(feature_query, genre_query, input_length)
+    #helper method for generate
+    #Execute a narrowing search
+    query_string = self.build_query(feature_query, genre_query)
     search = []
-    #Step 2
-    query_string = ""
-    if (feature_query.length > 0 || genre_query.length > 0)
-      query_string = self.build_query(feature_query, genre_query)
-    else
-      query_string = "title IS NOT 'Don't Fear the Reaper'" #TODO REFACTOR TO TOP
-    end
-    #puts ("QUERY_STRING: #{query_string}")
     #Step 3
     search.concat(Song.where(query_string))
     search.uniq!
-    query_size = feature_query.length
-    while (query_size > 0)
-      if (search.length < input_length)
+    if (search.length < input_length)
+      query_size = feature_query.length
+      feature_query.each do |query|
+        query = query.sub("4", "5").sub("6", "5")
+      end
+      query_string = self.build_query(feature_query, genre_query)
+      search.concat(Song.where(query_string))
+
+      while (query_size > 0)
+        break if (search.length >= input_length)
         #Step 4
-        broadened_query = feature_query.map do |query|
-          query = query.sub("4", "5").sub("6", "5")
-        end
-        #TODO -- TRY anohter search before combinations
         query_size -= 1
-        new_queries = broadened_query.combination(query_size).to_a
+        new_queries = feature_query.combination(query_size).to_a
         new_queries.each do |query|
           query_string = self.build_query(query, genre_query)
           search.concat(Song.where(query_string))
@@ -118,25 +106,18 @@ class Playlist < ActiveRecord::Base
             break
           end
         end
-      else
-        break
       end
     end
-
-    if (search.length <= 0)
-      puts "Couldn't satisfy query"
-    else
-      search = search.sample(input_length)
-      #Step 5
-      # this code is fine
-      playlist = Playlist.create
-      search.each do |song|
-        playlist.add_song(song)
-      end
-      playlist.name = p_name
-      playlist.save
-      return playlist
+    return search
+  end
+  def self.random_playlist(name, input_length)
+    playlist = Playlist.create(name: name)
+    list = Song.all.sample(input_length)
+    list.each do |song|
+      playlist.add_song(song)
     end
+    playlist.save()
+    return playlist
   end
 
   def self.build_query(feature_query, genre_query)
@@ -168,10 +149,23 @@ class Playlist < ActiveRecord::Base
     return_string
   end
 
-  def genres
-    #returns all unique genres as an array of strings
+  def establish_genres(attributes)
+    @genres = []
+    if (attributes == nil || attributes == [])
+      @genres = ALL_GENRES
+    else
+      @genres = attributes.uniq
+    end
+  end
 
-    return self.songs.map { |song| song.genre }
+  def genres
+    #genre currently does not persist, meaning this model will not work with loaded playlists without developing a genre model
+    if (@genres == nil || @genres == [])
+      @genres = ALL_GENRES
+    end
+    #returns all unique genres as an array of strings
+    #unique_genres = self.songs.map { |song| song.genre }.uniq!.sort
+    @genres.uniq
   end
 
   def average(feature)

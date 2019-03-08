@@ -61,6 +61,7 @@ describe Playlist do
     let(:test_playlist1) { Playlist.generate("test 1", ["happy"], 20) }
     let(:test_playlist2) { Playlist.generate("test 2", ["country", "melancholy", "chill"], 30) }
     let(:test_playlist3) { Playlist.generate("test 3", ["jazz", "country", "slow", "acoustic"], 25) }
+    let(:test_playlist4) { Playlist.generate("test 4", [], 20) }
 
     it "generates a playlist" do
       expect(test_playlist1.class).to be(Playlist)
@@ -70,6 +71,7 @@ describe Playlist do
       expect(test_playlist1.songs.length).to eq(20)
       expect(test_playlist2.songs.length).to eq(30)
       expect(test_playlist3.songs.length).to eq(25)
+      expect(test_playlist4.songs.length).to eq(20)
     end
 
     it "generates a playlist containing only genres specified" do
