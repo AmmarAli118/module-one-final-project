@@ -359,3 +359,4 @@ class Playlist < ActiveRecord::Base
     end
     return self
   end
+end
