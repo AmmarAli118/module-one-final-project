@@ -3,11 +3,8 @@ ActiveRecord::Base.logger.level = 1
 require "pry"
 
 class CLI include CliStringFormatting
-  attr_accessor :username, :main_menu, :playlist_menu, :playlist_generate_menu, :playlist_generate_tag_selection_menu,
-                :playlist_view_all_menu, :playlist_delete_menu, :playlist_find_menu, :playlist_search_menu,
-                :playlist_create_menu, :playlist_add_song_menu, :playlist_remove_song_menu, :playlist_optimize_menu,
-                :plain_menu, :playlist_display, :songs_menu, :songs_view_top_menu, :songs_find_menu,
-                :song_search_menu, :song_display
+  attr_accessor :username, :playlist_generate_tag_selection_menu,
+                :plain_menu, :playlist_display, :song_display
   def run
     exit_flag = false
 
@@ -20,44 +17,20 @@ class CLI include CliStringFormatting
       black_eyed_peas
     end
 
-    self.main_menu = CliMenu.new("Welcome! #{self.username}", "1. Playlists\n2. Songs\n3. Exit", "", "large")
-    self.playlist_menu = CliMenu.new("Playlists", "1. Generate Playlist\n2. View All Playlists\n3. Find Playlist\n4. Create Playlist\n5. Back", "", "large")
-
-    self.playlist_generate_menu = CliMenu.new("Generate Playlist", "Enter name for playlist:\nEnter number of songs:", "", "large")
     self.playlist_generate_tag_selection_menu = CliMenuTagSelection.new("Generate Playlist\nEnter tags for playlist seperated by a space:\nType 'submit' when finished.", "", "", "large")
-
-    #columnize_song_name_array(get_all_playlist_names_array) <- will be needed to add text
-    self.playlist_view_all_menu = CliMenu.new("Enter Number To View:", "", "--------------\na) Delete a Playlist")
-    self.playlist_delete_menu = CliMenu.new("Enter Number To Delete:", "", "--------------\n")
-
-    self.playlist_find_menu = CliMenu.new("Find Playlist\nEnter name of playlist:", "", "", "large")
-    self.playlist_search_menu = CliMenu.new("Enter number of the playlist you want to view:", "", "", "large")
-
-    self.playlist_create_menu = CliMenu.new("Create Playlist\nEnter name for playlist:", "", "", "large")
-
-    self.playlist_add_song_menu = CliMenu.new("Enter name of song you want to add:", "", "", "large")
-    self.playlist_remove_song_menu = CliMenu.new("Enter name of song you want to remove:", "", "")
-
-    self.playlist_optimize_menu = CliMenu.new("", "", "")
 
     self.plain_menu = CliMenu.new("", "", "")
 
     self.playlist_display = CliPlaylistDisplay.new
 
-    self.songs_menu = CliMenu.new("Songs", "1. Find Song\n2. Back\n", "", "large")
-
-    self.songs_view_top_menu = CliMenu.new("View Top Songs By Tag\nEnter tag to view top 10 songs:", "- acoustic  - dancing  - energetic\n- instrumental  - live   - lyrical\n- fast   - happy   - melancholy\n- slow    - chill\n", "", "large")
-
-    self.songs_find_menu = CliMenu.new("Find Song\nEnter name of song:", "", "", "large")
-
-    self.song_search_menu = CliMenu.new("Song Search\nEnter number of the song you want: ", "", "", "large")
-
     self.song_display = CliSongDisplay.new
 
     input = ""
     while !exit_flag
-      main_menu.display
-      input = main_menu.get_user_input
+      plain_menu.update("Welcome! #{self.username}", "1. Playlists\n2. Songs\n3. Exit", "", "large")
+      plain_menu.display
+      plain_menu.display
+      input = plain_menu.get_user_input
       case (input)
       when "1", "playlists"
         playlists
@@ -70,10 +43,12 @@ class CLI include CliStringFormatting
   end
 
   def playlists
+    plain_menu.update("Playlists", "1. Generate Playlist\n2. View All Playlists\n3. Find Playlist\n4. Create Playlist\n5. Back", "", "large")
     back_flag = false
     while !back_flag
-      playlist_menu.display
-      input = playlist_menu.get_user_input
+      plain_menu.update("Playlists", "1. Generate Playlist\n2. View All Playlists\n3. Find Playlist\n4. Create Playlist\n5. Back", "", "large")
+      plain_menu.display
+      input = plain_menu.get_user_input
       case (input)
       when "1", "generate playlist"
         generate_playlist
@@ -90,10 +65,11 @@ class CLI include CliStringFormatting
   end
 
   def songs
+    plain_menu.update("Songs", "1. Find Song\n2. Back\n", "", "large")
     back_flag = false
     while !back_flag
-      songs_menu.display
-      input = songs_menu.get_user_input
+      plain_menu.display
+      input = plain_menu.get_user_input
       case (input)
       # when "1", "view top songs by tag"
       #   view_top_songs_by_tag
@@ -106,8 +82,9 @@ class CLI include CliStringFormatting
   end
 
   def find_song
-    songs_find_menu.display
-    input = songs_find_menu.get_user_input
+    plain_menu.update("Find Song\nEnter name of song:", "", "", "large")
+    plain_menu.display
+    input = plain_menu.get_user_input
     result = song_search(input)
     if result != 0
       display_song(result)
@@ -120,9 +97,10 @@ class CLI include CliStringFormatting
   end
 
   def generate_playlist
-    playlist_generate_menu.display
-    playlist_name = playlist_generate_menu.get_user_input
-    playlist_size = playlist_generate_menu.get_user_input.to_i
+    plain_menu.update("Generate Playlist", "Enter name for playlist:\nEnter number of songs:", "", "large")
+    plain_menu.display
+    playlist_name = plain_menu.get_user_input
+    playlist_size = plain_menu.get_user_input.to_i
     tags = playlist_generate_tag_selection_menu.prompt_user_for_tag_selection
     if tags.class == String
       return 0
@@ -132,10 +110,9 @@ class CLI include CliStringFormatting
   end
 
   def view_all_playlists
-    playlist_view_all_menu.text = columnize_song_name_array(get_all_playlist_names_array, true, 1)
-    playlist_view_all_menu.footer = "-----------------------\na) Delete Playlist"
-    playlist_view_all_menu.display
-    input = playlist_view_all_menu.get_user_input
+    plain_menu.update("Enter Number To View:", columnize_song_name_array(get_all_playlist_names_array, true, 1), "--------------\na) Delete a Playlist")
+    plain_menu.display
+    input = plain_menu.get_user_input
     if input == "a" || input == "delete a playlist"
       delete_playlist
     end
@@ -149,9 +126,9 @@ class CLI include CliStringFormatting
     end
   end
   def delete_playlist
-    playlist_delete_menu.text = columnize_song_name_array(get_all_playlist_names_array, true, 1)
-    playlist_delete_menu.display
-    input = playlist_delete_menu.get_user_input
+    plain_menu.update("Enter Number To Delete:", columnize_song_name_array(get_all_playlist_names_array, true, 1), "--------------\n")
+    plain_menu.display
+    input = plain_menu.get_user_input
     i = 1
     (Playlist.all).each do |playlist|
       if input.to_i == i
@@ -163,39 +140,40 @@ class CLI include CliStringFormatting
   end
 
   def find_playlist
-    playlist_find_menu.display
-    input = playlist_find_menu.get_user_input
+    plain_menu.update("Find Playlist\nEnter name of playlist:", "", "", "large")
+    plain_menu.display
+    input = plain_menu.get_user_input
     i = 1
     text_string = ""
     possible_playlist = Playlist.where("name LIKE '%#{input}%'")
     if possible_playlist.empty?
-      playlist_search_menu.title = "No results found."
-      playlist_search_menu.text = text_string
-      playlist_search_menu.display
+      plain_menu.update("No results found.", text_string, "", "large")
+      plain_menu.display
       return 0
     end
     possible_playlist.each do |playlist|
       text_string += "#{i}. #{playlist.name}\n"
       i += 1
     end
-    playlist_search_menu.text = text_string
-    playlist_search_menu.display
-    input = playlist_search_menu.get_user_input
+    plain_menu.update("Enter number of the playlist you want to view:", text_string, "", "large")
+    plain_menu.display
+    input = plain_menu.get_user_input
     display_playlist(possible_playlist[(input.to_i - 1)])
   end
 
   def create_playlist
-    playlist_create_menu.display
-    playlist_name = playlist_create_menu.get_user_input
+    plain_menu.update("Create Playlist\nEnter name for playlist:", "", "", "large")
+    plain_menu.display
+    playlist_name = plain_menu.get_user_input
     new_playlist = Playlist.create(name: playlist_name)
     add_song_to_playlist(new_playlist)
     display_playlist(new_playlist)
   end
 
   def add_song_to_playlist(playlist)
-    playlist_add_song_menu.header = "#{playlist.name}\nEnter name of song you want to add:\n"
-    playlist_add_song_menu.display
-    input = playlist_add_song_menu.get_user_input
+    plain_menu.update("#{playlist.name}\nEnter name of song you want to add:", "", "", "large")
+    plain_menu.display
+    input = plain_menu.get_user_input
 
     new_song = song_search(input)
     if new_song != 0
@@ -205,13 +183,9 @@ class CLI include CliStringFormatting
   end
 
   def remove_song_from_playlist
-    playlist_remove_song_menu.header = "#{playlist_display.playlist.name}\n"
-    text_string = columnize_song_name_array(playlist_display.get_song_names)
-
-    playlist_remove_song_menu.text = text_string
-    playlist_remove_song_menu.footer = "\nEnter number of song you want to remove: \n"
-    playlist_remove_song_menu.display
-    input = playlist_remove_song_menu.get_user_input.to_i
+    plain_menu.update("#{playlist_display.playlist.name}\n", columnize_song_name_array(playlist_display.get_song_names), "\nEnter number of song you want to remove: \n")
+    plain_menu.display
+    input = plain_menu.get_user_input.to_i
 
     i = 1
     song_to_delete = nil
@@ -330,18 +304,17 @@ class CLI include CliStringFormatting
     text_string = ""
     possible_songs = Song.where("title LIKE '%#{input}%'")
     if possible_songs.empty?
-      song_search_menu.header = "No results found."
-      song_search_menu.display
+      plain_menu.update("No results found.", "", "", "large")
+      plain_menu.display
       return 0
     end
     possible_songs.each do |song|
       text_string += "#{i}. #{song.title} - #{song.artist}\n"
       i += 1
     end
-
-    song_search_menu.text = text_string
-    song_search_menu.display
-    input = song_search_menu.get_user_input
+    plain_menu.update("Song Search\nEnter number of the song you want: ", text_string, "", "large")
+    plain_menu.display
+    input = plain_menu.get_user_input
 
     possible_songs[(input.to_i - 1)]
   end

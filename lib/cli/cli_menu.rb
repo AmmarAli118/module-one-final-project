@@ -21,6 +21,11 @@ class CliMenu include CliStringFormatting
     self.display_size = "versatile"
   end
 
+  def update(header = "", text = "", footer = "", display_size = "versatile")
+    @header, @text, @footer, @display_size = header, text, footer, display_size
+    @input = ""
+  end
+
   def get_user_input
     self.input = gets.chomp!
     self.input.downcase!
